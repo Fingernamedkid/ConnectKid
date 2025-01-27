@@ -1,0 +1,49 @@
+{
+  "name": "frontend2",
+  "version": "1.0.0",
+  "main": "expo-router/entry.js",
+  "scripts": {
+    "test": "jest --watchAll",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-navigation/drawer": "^7.0.3",
+    "@testing-library/react-native": "^12.8.1",
+    "autoprefixer": "^10.4.20",
+    "axios-mock-adapter": "^2.1.0",
+    "expo": "~52.0.6",
+    "expo-camera": "~16.0.5",
+    "expo-router": "~4.0.5",
+    "expo-status-bar": "~2.0.0",
+    "jest": "~29.7.0",
+    "jest-expo": "~52.0.1",
+    "jest-mock-axios": "^4.8.0",
+    "jsonwebtoken": "^9.0.2",
+    "nativewind": "^4.1.23",
+    "postcss": "^8.4.49",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.1",
+    "react-native-gesture-handler": "~2.20.2",
+    "react-native-reanimated": "~3.16.1",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-web": "~0.19.13",
+    "react-test-renderer": "^18.3.1",
+    "tailwindcss": "^3.4.15",
+    "react-native-maps": "1.18.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)"
+    ]
+  },
+  "private": true
+}
