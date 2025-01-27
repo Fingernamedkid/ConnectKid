@@ -1,31 +1,25 @@
 // colors.js
 export const colorsPalette = {
-  light:{
-    primary: '#3498db',
-    secondary: '#2d498a',
-    background_c1:'#E3F6F7',
-    background: '#B2EBF9',
-    text: '#2c3e50',
-    link: 'blue',
-    alert: '#ba1313',
-    lightText: 'white',
-    lightAlert: '#db8f8f'
-
+  light: {
+    primary: '#4CAF50',
+    secondary: '#2196F3',
+    background_c1: '#E3F2FD',
+    background: '#90ee90',
+    text: '#2C3E50',
+    link: '#2980B9',
+    alert: '#E74C3C',
+    lightText: 'black',
+    lightAlert: '#4CAF50'
   },
-  dark:{
-    primary: '#C69749',
-    secondary: '#735F32',
-    background_c1: '#282A3A',
-    background: 'black',
-    text: 'white',
-    link: 'yellow',
-    alert: '#ba1313',
+  dark: {
+    primary: '#81C784',
+    secondary: '#64B5F6',
+    background_c1: '#1C2B36',
+    background: '#121212',
+    text: '#E0E0E0',
+    link: '#80DEEA',
+    alert: '#FF6F61',
     lightText: 'white',
-    lightAlert: '#db8f8f'
-
+    lightAlert: '#4CAF50'
   }
-    
-  };
-
-
-
+};

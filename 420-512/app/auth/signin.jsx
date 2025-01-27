@@ -7,7 +7,7 @@ import { Link, useRouter} from 'expo-router'
 import { signIn } from '../../lib/axios'
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { SafeAreaView } from 'react-native-safe-area-context'
-
+import * as Crypto from 'expo-crypto';
 
 const  WIDTH_BTN = Dimensions.get('window').width - 56
 
@@ -46,21 +46,26 @@ const signin = () => {
     console.log(`Trying to signIn with usernameOrEmail : ${form.usernameOrEmail} and password : ${form.password}`)
 
     try{
-        setLoading(true)
-        const result = await signIn(form.usernameOrEmail,form.password)
-        setLoading(false)
-        setForm({usernameOrEmail:"",password:""})
-        router.push(`../${result.id}/profile`)
+      setLoading(true)
+      const hashedPassword = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        form.password
+      );
+      const result = await signIn(form.usernameOrEmail, hashedPassword)
+
+      setLoading(false)
+      setForm({usernameOrEmail:"",password:""})
+      router.push(`../${result.id}/profileView`)
 
     } catch(error){
-        setLoading(false)
-        if(error.message == "AxiosError: Request failed with status code 401"){
-          setMsgErreur("Identifiant ou mot de passe incorrect")
-        }
-        else{
-          setMsgErreur("Désolé : Il y a un problème de notre côté, veuillez réessayer plus tard.")
-        }
-        console.log("Error : ",error.message)
+      setLoading(false)
+      if(error.message == "AxiosError: Request failed with status code 401"){
+        setMsgErreur("Identifiant ou mot de passe incorrect")
+      }
+      else{
+        setMsgErreur("Désolé : Il y a un problème de notre côté, veuillez réessayer plus tard.")
+      }
+      console.log("Error : ",error.message)
     }
 
   }   
@@ -73,7 +78,7 @@ const signin = () => {
           >
       <SafeAreaView>
         <ScrollView showsVerticalScrollIndicator={false}>
-              <Text className="text-7xl font-bold tracking-[2px] text-center uppercase pt-24 pb-16" style={{color:colors.primary}}>ChatMV</Text>
+              <Text className="text-7xl font-bold tracking-[2px] text-center pt-24 pb-16" style={{color:colors.primary}}>FitTrackr</Text>
               <View className="flex-1 justify-center items-center gap-8" >
                 <Text className="text-4xl font-semibold pb-4" style={{color:colors.text}}>Connectez-vous</Text>
                 {loading ? <ActivityIndicator size="large" color={colors.primary} /> : null}
@@ -94,7 +99,7 @@ const signin = () => {
                       style={[{color:colors.text,backgroundColor:colors.background, width:WIDTH_BTN},alertIdentifier ? {paddingRight:56,borderWidth:2,borderColor:colors.alert} : {}]}
                       onChangeText={(item) => {setForm({...form,usernameOrEmail : item})}}
                       placeholder="Entrez l'identifiant"
-                      placeholderTextColor={colors.secondary}
+                      placeholderTextColor={colors.text}
                       value={form.usernameOrEmail}
                       />
                     {alertIdentifier ? <Icon className="absolute right-4" name="exclamation-triangle" size={30} color={colors.alert} />: null}
@@ -114,7 +119,7 @@ const signin = () => {
                         style={[{width:WIDTH_BTN,color:colors.text,backgroundColor:colors.background},alertMDP ? {paddingRight:56,borderWidth:2,borderColor:colors.alert} : {}]}
                         onChangeText={(item) => {setForm({...form,password : item})}}
                         placeholder='Entrez le mot de passe'
-                        placeholderTextColor={colors.secondary}
+                        placeholderTextColor={colors.text}
                         value={form.password}
                       />
                     {alertMDP ? <Icon name="exclamation-triangle" size={30} color={colors.alert} style={{ position: 'absolute',right: 15, }}/>: null}

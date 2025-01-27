@@ -3,11 +3,13 @@ import { useState, useRef } from 'react';
 import {useRouter } from "expo-router"
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUserId } from '../../contexts/UserIdContext';
 
 export default function App() {
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
   const router = useRouter();
+  const { userId, setUserId } = useUserId();
   const cameraRef = useRef(null); 
   if (!permission) {
     // Camera permissions are still loading.
@@ -23,19 +25,16 @@ export default function App() {
       </View>
     );
   }
-
   function toggleCameraFacing() {
     setFacing(current => (current === 'back' ? 'front' : 'back'));
   }
 
     const takeAPhoto = async () => {
       if (cameraRef.current) {
-        const photoData = await cameraRef.current.takePictureAsync();
-        console.log(photoData.uri);
-  
-        // Save the photo URI to AsyncStorage
-        await AsyncStorage.setItem('photo', photoData.uri);
-        router.back()
+        const photoData = await cameraRef.current.takePictureAsync({base64: true,quality: 0.2, width: 100,   height: 100,  });
+        await AsyncStorage.setItem('photo', photoData.base64);
+        await AsyncStorage.setItem('photoUpdated', 'true');
+        router.push(`./${userId}/profile`)
       }
     };
   return (

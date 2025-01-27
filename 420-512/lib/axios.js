@@ -161,3 +161,65 @@ export async function fetchBlocks(){
         throw new Error(error)
     }
 }
+export async function fetchUserInfo(id){
+    try{
+        const token = await getToken();
+        console.log(`JWT token: ${token}`);
+        console.log(`axios.js : fetchUserInfo`)
+        const userInfo = await api.get(`/userInfo/${id}`)
+        if (userInfo.status == 409) {
+            throw new Error('axios.js : Failed to fetch userInfo, user not found')
+        }
+        if(userInfo.status != 200 ){
+            throw new Error('axios.js : Failed to fetch userInfo')
+        }
+        return userInfo.data
+    }catch(error){
+        console.log("Error fetchingUserInfo : ",error)
+        throw new Error(error)
+    }
+}
+export async function fetchTop102Weeks(){
+    try{
+        console.log(`axios.js : fetchTop102Weeks`)
+        const top10 = await api.get(`/top10`)
+        if(top10.status != 200){
+            throw new Error('axios.js : Failed to fetch top10')
+        }
+        return top10.data
+    }catch(error){
+        console.log("Error fetchingTop10 : ",error)
+        throw new Error(error)
+    }
+}
+export async function fetchTop10Least() {
+    try {
+        console.log(`axios.js : fetchTop10Least`)
+        const top10Least = await api.get(`/top10-leaststeps`)
+        if (top10Least.status !== 200) {
+            throw new Error('axios.js : Failed to fetch top10 least steps')
+        }
+        return top10Least.data
+    } catch (error) {
+        console.log("Error fetchingTop10 Least: ", error)
+        throw new Error(error)
+    }
+}
+export async function sendDatas(listcoordnate, id, steps){
+    try{
+        console.log(`axios.js : sendDatas`)
+        const data = {
+            listcoordnate: listcoordnate,
+            id: id,
+            steps: steps
+        }
+        const blocks = await api.post(`/trip`, data)
+        if(blocks.status != 200){
+            throw new Error('axios.js : Failed to fetch blocks')
+        }
+        return blocks.data
+    }catch(error){
+        console.log("Error fetchingBlocks : ",error)
+        throw new Error(error)
+    }
+}

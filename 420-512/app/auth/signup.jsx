@@ -7,71 +7,74 @@ import { useRouter, Link} from 'expo-router'
 import { setToken, signUp } from '../../lib/axios'
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { SafeAreaView } from 'react-native-safe-area-context'
+import * as Crypto from 'expo-crypto';
 
 const  WIDTH_BTN = Dimensions.get('window').width - 56
 
-const SignUp = () => { 
-  
-  const router = useRouter()
-  const { theme } = useTheme()
-  const [alertUsername, setAlertUsername] = useState(false)
-  const [alertEmail, setAlertEmail] = useState(false)
-  const [alertMDP, setAlertMDP] = useState(false)
-  const [msgErreur, setMsgErreur] = useState("")
-  const [loading, setLoading] = useState(false)
-  const colors = colorsPalette[theme]
-  
+  const SignUp = () => { 
+    
+    const router = useRouter()
+    const { theme } = useTheme()
+    const [alertUsername, setAlertUsername] = useState(false)
+    const [alertEmail, setAlertEmail] = useState(false)
+    const [alertMDP, setAlertMDP] = useState(false)
+    const [msgErreur, setMsgErreur] = useState("")
+    const [loading, setLoading] = useState(false)
+    const colors = colorsPalette[theme]
+    
 
-  const [form, setForm] = useState({username:"",email:"",password:""})
-  
-  const submit = async () => {
+    const [form, setForm] = useState({username:"",email:"",password:""})
 
-    if(form.username == "" || form.password == "" || form.email == ""){
-      if(form.username == ""){
-          setAlertUsername(true)
-      }
-      else{
-        setAlertUsername(false)
-      }
-      if(form.password == ""){
-        setAlertMDP(true)
-      }
-      else{
-        setAlertMDP(false)
-      }
-      if(form.email == ""){
-        setAlertEmail(true)
-      }
-      else{
-        setAlertEmail(false)
-      }
-      return null
-    } 
+    const submit = async () => {
 
-    console.log(`Trying to SignUp with username : ${form.username}, email : ${form.email} and password : ${form.password}`)
+      if(form.username == "" || form.password == "" || form.email == ""){
+          if(form.username == ""){
+              setAlertUsername(true)
+          }
+          else{
+              setAlertUsername(false)
+          }
+          if(form.password == ""){
+              setAlertMDP(true)
+          }
+          else{
+              setAlertMDP(false)
+          }
+          if(form.email == ""){
+              setAlertEmail(true)
+          }
+          else{
+              setAlertEmail(false)
+          }
+      }
 
-    try{
-        setLoading(true)
-        const result = await signUp(form.username, form.email ,form.password)
-        
-        setLoading(false)
-        setForm({username:"", email:"", password:""})
-        router.push(`../${result.id}/profile`)
+      console.log(`Trying to SignUp with username : ${form.username}, email : ${form.email} and password : ${form.password}`)
 
-    } catch(error){
-        setLoading(false)
-        console.log(error)
-        if(error.message.includes("Request failed with status code 409")){
-          
-          setMsgErreur("Email et/ou Identifiant déjà utilisé")
-        }
-        else{
-          setMsgErreur("Désolé : Il y a un problème de notre côté, veuillez réessayer plus tard.")
-        }
-        console.log("Error : ",error)
-    }
+      try{
+          setLoading(true);
+          const hashedPassword = await Crypto.digestStringAsync(
+              Crypto.CryptoDigestAlgorithm.SHA256, form.password
+          );
+          const result = await signUp(form.username, form.email,hashedPassword)
 
-  }   
+          setLoading(false)
+          setForm({username:"", email:"", password:""})
+          router.push(`../${result.id}/profileView`)
+
+      } catch(error){
+          setLoading(false)
+          console.log(error)
+          if(error.message.includes("Request failed with status code 409")){
+
+              setMsgErreur("Email et/ou Identifiant déjà utilisé")
+          }
+          else{
+              setMsgErreur("Désolé : Il y a un problème de notre côté, veuillez réessayer plus tard.")
+          }
+          console.log("Error : ",error)
+      }
+
+  }
   return (
 
     <KeyboardAvoidingView 
@@ -85,7 +88,7 @@ const SignUp = () => {
           className="flex-1 items-center"
           >
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text className="text-7xl font-bold tracking-[2px] text-center uppercase pt-24 pb-16" style={{color:colors.primary}}>ChatMV</Text>
+              <Text className="text-7xl font-bold tracking-[2px] text-center pt-24 pb-16" style={{color:colors.primary}}>FitTrackr</Text>
               <View className="flex-1 justify-center items-center gap-8" >
                 <Text className="text-4xl font-semibold pb-4" style={{color:colors.text}}>Créez votre compte</Text>
                 {loading ? <ActivityIndicator size="large" color={colors.primary} /> : null}
@@ -105,7 +108,7 @@ const SignUp = () => {
                       style={[{width:WIDTH_BTN, color:colors.text, backgroundColor:colors.background, borderColor:colors.primary},alertEmail ? {paddingRight:56,borderWidth:2,borderColor:colors.alert} : {}]}
                       onChangeText={(item) => {setForm({...form,email : item})}}
                       placeholder="Entrez votre courriel"
-                      placeholderTextColor={colors.secondary}
+                      placeholderTextColor={colors.text}
                       value={form.email}
                       />
                     {alertEmail ? <Icon className="absolute right-4" name="exclamation-triangle" size={30} color={colors.alert} />: null}
@@ -119,7 +122,7 @@ const SignUp = () => {
                       style={[{width:WIDTH_BTN,color:colors.text, backgroundColor:colors.background, borderColor:colors.primary},alertUsername ? {paddingRight:56,borderWidth:2,borderColor:colors.alert} : {}]}
                       onChangeText={(item) => {setForm({...form,username : item})}}
                       placeholder="Entrez l'identifiant"
-                      placeholderTextColor={colors.secondary}
+                      placeholderTextColor={colors.text}
                       value={form.username}
                       />
                     {alertUsername ? <Icon className="absolute right-4" name="exclamation-triangle" size={30} color={colors.alert} />: null}
@@ -128,8 +131,8 @@ const SignUp = () => {
                   
                   {alertUsername ? <Text style={{color:colors.alert, paddingTop:5}}>Identifiant : Ce champs doit être rempli</Text> : null}
                 </View>
-                <View className="border-2 rounded-lg">
-                  <View className="absolute z-10 -top-2.5 left-4 w-auto px-1" style={{backgroundColor:colors.background_c1}}><Text className="w-auto">Mot de passe</Text></View>
+                <View className="rounded-lg">
+                  
                   <View className="m-3 z-0 flex-row items-center">
 
                     <TextInput
@@ -137,7 +140,7 @@ const SignUp = () => {
                         style={[{width:WIDTH_BTN, color:colors.text, backgroundColor:colors.background, borderColor:colors.primary},alertMDP ? {paddingRight:56,borderWidth:2,borderColor:colors.alert} : {}]}
                         onChangeText={(item) => {setForm({...form,password : item})}}
                         placeholder='Entrez le mot de passe'
-                        placeholderTextColor={colors.secondary}
+                        placeholderTextColor={colors.text}
                         value={form.password}
                         />
                     {alertMDP ? <Icon className="absolute right-4" name="exclamation-triangle" size={30} color={colors.alert} />: null}

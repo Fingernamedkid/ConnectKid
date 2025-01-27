@@ -12,11 +12,14 @@ const PageUnderConstruction = () => {
  
   return (
     <View className="flex-1 justify-center items-center gap-4" style={{backgroundColor:colors.background_c1}}>
-      <Icon className={"text-[180px]"} color={colors.primary} name="tools" />
+      <Icon className={"text-[180px]"} color={colors.primary} name="phone" />
       <View className={"items-center gap-2"} >
 
-        <Text className={"text-3xl"} style={{color:colors.Text}}>
-          Page en construction
+        <Text className={"text-1xl align-center"} style={{color:colors.Text}}>
+          Veuillez nous contactez au numéro suivant afin de récupérer votre mot de passe:
+        </Text>
+        <Text className={"text-4xl"} style={{color:colors.Text}}>
+          911-213-1231
         </Text>
         <Link href="/" style={{color:colors.link}}>
           Retourner à l'acceuil

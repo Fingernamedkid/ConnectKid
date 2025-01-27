@@ -1,0 +1,1 @@
+Puisque nous avons des appareils ios, nous ne savons pas si cela fonctionne.
