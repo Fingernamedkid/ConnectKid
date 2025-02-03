@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { MongoClient,ServerApiVersion } from 'mongodb';
-
+import { encryptPassword, decryptPassword } from './password.js';
 // -----------------------------------------          Config          ----------------------------------------------
 
 dotenv.config({ path: './setup.env' });
@@ -17,9 +17,7 @@ const client = new MongoClient(uri, {
 let db;
 export async function run() {
     try {
-      // Connect the client to the server	(optional starting in v4.7)
       await client.connect();
-      // Send a ping to confirm a successful connection
       await client.db(bd).command({ ping: 1 });
       db = client.db(bd).collection(coll);
       console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -28,11 +26,11 @@ export async function run() {
     }
   }
 
-
+// -----------------------------------------          Functions          ----------------------------------------------
 
 export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, password) {
     console.log(`Database : get user with username/email : ${usernameOrEmail} and password : ${password}`)
-    const rows = await db.find({$or:[{username:usernameOrEmail}, {email:usernameOrEmail}],password:password}).toArray();
+    const rows = await db.find({$or:[{username:usernameOrEmail}, {email:usernameOrEmail}],password:encryptPassword(password)}).toArray();
     console.log(rows[0])
     return rows[0];
 } 
@@ -67,7 +65,7 @@ export async function createUser(email, username, password, type, phonenum) {
       _id: userId,
       email:email, 
       username:username,
-      password:password,
+      password: encryptPassword(password),
       pairId:pairId,
       type:type,
       status:"offline",

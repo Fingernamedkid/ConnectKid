@@ -16,16 +16,12 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }))
 app.post("/users/signin", async (req, res) => {
     const { usernameOrEmail, password } = req.body;
     console.log("Post : users/signin")
-
-    // Check if username or email and password are provided
     if (!usernameOrEmail || !password) {
         return res.status(400).json({ error: "Username or email and password are required." });
     }
 
     try {
-        // Modify the user retrieval function to accept either username or email
         console.log(`End point request with user/email : ${usernameOrEmail} and pass : ${password}`)
-
         const user = await getUserByUsernameOrEmailAndPassword(usernameOrEmail, password);
         if (!user) {
             return res.status(401).json({ error: "Invalid username/email or password." });
@@ -34,13 +30,11 @@ app.post("/users/signin", async (req, res) => {
         
         const token = jwt.sign({ userId }, SECRET_KEY, { expiresIn: '1h' });
         console.log(token)
-        // Return user data (ensure sensitive data like password is not returned)
         res.status(200).json({
             id: user._id,
             username: user.username,
             email: user.email,
             token
-            // Add any other fields you want to include in the response
         });
     } catch (error) {
         console.error('Error retrieving user: ', error);
@@ -51,24 +45,18 @@ app.post("/users/signin", async (req, res) => {
 
 app.post("/users", async (req, res) => {
     const { username, password, email, type, phonenum  } = req.body;
-
-    // Check for missing fields
     if (!username || !password || !email) {
         return res.status(400).json({ error: "Username, password, and email are required." });
     }
 
     try {
-        // Check if the username or email already exists
         const existingUser = await getUserByUsernameOrEmail(username, email);
         if (existingUser) {
             return res.status(409).json({ error: "Username or email already exists." });
         }
-
-        // Proceed to create the user
         const newUser = await createUser( email, username, password, type, phonenum );
         const token = jwt.sign({ userId:newUser._id }, SECRET_KEY, { expiresIn: '1h' });
         console.log(token)
-        // Return the newly created user information
         res.status(201).json({
             id: newUser._id,
             username: newUser.username,
@@ -88,16 +76,11 @@ app.get("/users/:id", async (req, res) => {
     try {
         const token = req.headers['authorization']?.split(' ')[1];
         if (!token) return res.status(403).send('Forbidden');
-        
         const userId = req.params.id; 
-
-        // Check for missing fields
         if (!userId) {
             return res.status(400).json({ error: "Request missing parameters" });
         }
-
-        // Verify the token
-        const decoded = jwt.verify(token, SECRET_KEY); // Synchronous verification
+        const decoded = jwt.verify(token, SECRET_KEY); 
         if (!decoded?.userId) {
             return res.status(401).json({ error: "Forbidden: badToken" });
         }
@@ -122,8 +105,8 @@ app.get("/users/:id", async (req, res) => {
             username: user.username || "",
             email: user.email || "",
             image64: user.image64 || "",
-            description: user.description || "",
-            steps: steps || 0
+            phonenum: user.phonenum || "",
+            pairId: pairId || ""
         });
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {
@@ -177,6 +160,7 @@ app.put("/users/:id", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
+
 app.delete("/users/:id", async (req, res) => {
     try {
         const token = req.headers['authorization']?.split(' ')[1];
@@ -211,20 +195,15 @@ app.delete("/users/:id", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
+
 app.post("/users/authenticate", async (req, res) => {
-    
     try {
         const token = req.headers['authorization']?.split(' ')[1];
         if (!token) return res.status(403).send('Forbidden');
-
-        // Verify the token
         const decoded = jwt.verify(token, SECRET_KEY); // Synchronous verification
         if (!decoded?.userId) {
             return res.status(409).json({ error: "Forbidden: badToken" });
         }
-
-    
-        
         res.status(200).json({
             id: decoded.userId,
         });
