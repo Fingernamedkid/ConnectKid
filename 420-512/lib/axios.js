@@ -66,14 +66,16 @@ export async function signIn(usernameOrEmail, password){
     }
 }
 
-export async function signUp(username, email , password){
+export async function signUp(username, email , password, type, phonenum){
     try {
-        console.log(`Trying to signUp with email: ${email}, username: ${username} and password: ${password}`);
+        console.log(`Trying to signUp with email: ${email}, username: ${username}, type:${type}, phonenum:${phonenum} and password: ${password}`);
 
         const signUpData = {
             email:email,
             username: username,
-            password: password
+            password: password,
+            type: type,
+            phonenum: phonenum
         };
 
         const userAuth = await api.post(`/users`, signUpData,{
