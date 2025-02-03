@@ -1,6 +1,5 @@
-import mysql from 'mysql2';
 import dotenv from 'dotenv';
-import { MongoClient,ServerApiVersion ,ObjectId} from 'mongodb';
+import { MongoClient,ServerApiVersion } from 'mongodb';
 
 // -----------------------------------------          Config          ----------------------------------------------
 
@@ -42,14 +41,6 @@ export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, passw
     return rows[0];
 } 
 
-export async function getUserByUsernameAndPassword(username, password){
-    //DEBUG
-    console.log(`Database : get users with username: ${username} and password : ${password}`)
-    //
-    const rows = await pool.query(`SELECT * FROM users WHERE username=? and password=?`,[username,password])
-    return rows[0]
-}
-
 export async function getUserByUsernameOrEmail(username, email) {
     // DEBUG
     console.log(`Database : get users with username: ${username} OR email : ${email}`);
@@ -58,25 +49,39 @@ export async function getUserByUsernameOrEmail(username, email) {
     console.log(rows[0]);
     return rows[0];
 }
+function generatePairid() {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
 
-export async function createUser(email, username, password) {
+export async function createUser(email, username, password, type, phonenum) {
   // DEBUG
   console.log(`Database : creating user with email: ${email}, username: ${username} and password : ${password}`);
   
   let largestId = await db.find({}).sort({ _id: -1 }).limit(1).toArray();
-  
   let userId = largestId.length > 0 ? largestId[0]._id + 1 : 1;
-  
+  let pairId;
+  while (true){
+    pairId = generatePairid()
+    if (!(await db.findOne({ pairId: pairId }))) {
+      break;
+    }
+  }
   let user = { 
       _id: userId,
       email:email, 
       username:username,
       password:password,
-      routes:[],
-      description:"",
+      pairId:pairId,
+      type:type,
+      status:"offline",
+      contact:[],
+      phonenum:phonenum,
       image64:""
-
-
   }
   await db.insertOne(user);
   let res = await getUserById(userId);
@@ -108,7 +113,7 @@ export async function updateUserProfile(userData){
       $set: {
         username: userData.username,
         email: userData.email,
-        description: userData.description,
+        phonenum: userData.phonenum,
         image64: userData.profilePic
       }
     };
@@ -124,124 +129,6 @@ export async function deleteUserById(id){
     return result.deletedCount;
 }
 
-export async function addtrips(id,locations,steps){
-    //DEBUG
-    console.log(`Database : add trips for user with id : ${id}`)
-    //
-    const query = { _id: id };
-    const update = {
-      $push: {
-        routes: {
-          steps: steps,
-          date: new Date(),
-          locations: locations,
-        },
-      },
-    };
-    await db.updateOne(query, update);
-    
-    return true
-}
-export async function gettrips(id,offset){
-  //DEBUG
-  console.log(`Database : find trips of user with id : ${id}`)
-  //
-  const res = db.aggregate([
-    { $match: { _id: id } },
-    { $unwind: "$routes" },
-    { $sort: { "routes.date": -1 } },
-    { $skip: offset },
-    { $limit: 10 },
-  ]);
-  return res.toArray();
-}
-
-
-export async function getUserInfo(id){
-  //DEBUG
-  console.log(`Database : finding user info with Id : ${id}`)
-  const res = await db.find({ _id: parseInt(id) }).project({ password: 0 }).toArray();
-  return res[0];
-}
-
-export async function getTop10UsersByStepsLastTwoWeeks() {
-  const today = new Date();
-  const twoWeeksAgo = new Date(today);
-  twoWeeksAgo.setDate(today.getDate() - 14);
-
-  const pipeline = [
-    { $unwind: "$routes" },
-    {
-      $match: {
-        "routes.date": {
-          $gte: twoWeeksAgo,
-          $lte: today
-        }
-      }
-    },
-    { $sort: { "routes.steps": -1 } },
-    { $limit: 10 },
-    {
-      $project: {
-        _id: 1,
-        username: 1,
-        image64: 1,
-        steps: "$routes.steps" 
-      }
-    }
-  ];
-  
-  const result = await db.aggregate(pipeline).toArray();
-  return result;
-}
-export async function getTop10UsersByLeastStepsLastTwoWeeks() {
-  const today = new Date();
-  const twoWeeksAgo = new Date(today);
-  twoWeeksAgo.setDate(today.getDate() - 14);
-
-  const pipeline = [
-    { $unwind: "$routes" },
-    {
-      $match: {
-        "routes.date": {
-          $gte: twoWeeksAgo,
-          $lte: today
-        }
-      }
-    },
-    { $sort: { "routes.steps": 1 } },
-    { $limit: 10 },
-    {
-      $project: {
-        _id: 1,
-        username: 1,
-        image64: 1,
-        steps: "$routes.steps"
-      }
-    }
-  ];
-
-  const result = await db.aggregate(pipeline).toArray();
-  return result;
-}
-export async function findLargestStepsofUserwitId(id) {
-  console.log(`Database : find largest steps of user with id : ${id}`);
-
-  const pipeline = [
-    { $match: { _id: parseInt(id) } }, 
-    { $unwind: "$routes" },  
-    { $sort: { "routes.steps": -1 } },  
-    { $limit: 1 },  
-    {
-      $project: {
-        steps: "$routes.steps"  
-      }
-    }
-  ];
-  const result = await db.aggregate(pipeline).toArray();
-  console.log(result)
-  return result[0]?.steps;
-}
 async function testCreateUser() {
   try {
       await run(); // Ensure DB connection
