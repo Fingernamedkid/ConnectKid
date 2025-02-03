@@ -20,7 +20,7 @@ export async function run() {
       // Connect the client to the server	(optional starting in v4.7)
       await client.connect();
       // Send a ping to confirm a successful connection
-      await client.db("mobile").command({ ping: 1 });
+      await client.db(bd).command({ ping: 1 });
       db = client.db(bd).collection(coll);
       console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } catch(exception){
@@ -28,23 +28,17 @@ export async function run() {
     }
   }
 
-// -----------------------------------------         Queries         ----------------------------------------------
 
 
 export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, password) {
-    //DEBUG
     console.log(`Database : get user with username/email : ${usernameOrEmail} and password : ${password}`)
-    //
     const rows = await db.find({$or:[{username:usernameOrEmail}, {email:usernameOrEmail}],password:password}).toArray();
-    
     console.log(rows[0])
     return rows[0];
 } 
 
 export async function getUserByUsernameOrEmail(username, email) {
-    // DEBUG
     console.log(`Database : get users with username: ${username} OR email : ${email}`);
-    //
     const rows = await db.find({$or:[{username: username}, {email: email}]}).toArray();
     console.log(rows[0]);
     return rows[0];
@@ -59,9 +53,7 @@ function generatePairid() {
 }
 
 export async function createUser(email, username, password, type, phonenum) {
-  // DEBUG
   console.log(`Database : creating user with email: ${email}, username: ${username} and password : ${password}`);
-  
   let largestId = await db.find({}).sort({ _id: -1 }).limit(1).toArray();
   let userId = largestId.length > 0 ? largestId[0]._id + 1 : 1;
   let pairId;

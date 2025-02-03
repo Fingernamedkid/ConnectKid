@@ -1,5 +1,5 @@
 import express from 'express';
-import {getUserByUsernameOrEmailAndPassword, createUser, getUserByUsernameOrEmail} from './database.js';
+import {getUserByUsernameOrEmailAndPassword, createUser, getUserByUsernameOrEmail, run} from './database.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
 
