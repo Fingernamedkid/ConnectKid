@@ -168,7 +168,7 @@ export async function fetchUserInfo(id){
         const token = await getToken();
         console.log(`JWT token: ${token}`);
         console.log(`axios.js : fetchUserInfo`)
-        const userInfo = await api.get(`/userInfo/${id}`)
+        const userInfo = await api.get(`/user/${id}`)
         if (userInfo.status == 409) {
             throw new Error('axios.js : Failed to fetch userInfo, user not found')
         }

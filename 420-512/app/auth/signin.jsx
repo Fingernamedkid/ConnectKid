@@ -47,11 +47,7 @@ const signin = () => {
 
     try{
       setLoading(true)
-      const hashedPassword = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        form.password
-      );
-      const result = await signIn(form.usernameOrEmail, hashedPassword)
+      const result = await signIn(form.usernameOrEmail, form.password)
 
       setLoading(false)
       setForm({usernameOrEmail:"",password:""})

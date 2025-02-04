@@ -29,11 +29,22 @@ export async function run() {
 // -----------------------------------------          Functions          ----------------------------------------------
 
 export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, password) {
-    console.log(`Database : get user with username/email : ${usernameOrEmail} and password : ${password}`)
-    const rows = await db.find({$or:[{username:usernameOrEmail}, {email:usernameOrEmail}],password:encryptPassword(password)}).toArray();
-    console.log(rows[0])
-    return rows[0];
-} 
+  console.log(`Database : get user with username/email : ${usernameOrEmail} and password : ${password}`);
+  const rows = await db.find({$or:[{username:usernameOrEmail}, {email:usernameOrEmail}]}).toArray();
+  console.log(rows[0]);
+  if (rows.length > 0) {
+    const user = rows[0];
+    const passworddecrypt = decryptPassword(user.password);
+    console.log(passworddecrypt);
+    console.log(password);
+    if (passworddecrypt === password) {
+      console.log(user);
+      return user;
+    }
+  }
+  console.log("No user found or password mismatch");
+  return null;
+}
 
 export async function getUserByUsernameOrEmail(username, email) {
     console.log(`Database : get users with username: ${username} OR email : ${email}`);

@@ -1,4 +1,4 @@
-import { Image, Text, View, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { Image, Text, View, ScrollView, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colorsPalette } from '../../assets/colorsPalette';
@@ -6,10 +6,11 @@ import { fetchUserInfo } from '../../lib/axios';
 import { useGlobalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ProfileImageMapping } from '../../assets/images/profile/profileImageMapping';
-import MapView, { Marker, Polyline } from 'react-native-maps';
 import { StyleSheet } from 'react-native';
 import { useUserId } from '../../contexts/UserIdContext';
 const WIDTH = Dimensions.get('window').width;
+
+
 
 const ProfileView = () => {
   const { theme } = useTheme();
@@ -75,22 +76,7 @@ const ProfileView = () => {
     }, [glob.user_id]) // Only depend on user_id change
   );
   
-  const nextLocation = () => {
-    if (locationIndex + 1 < locationList.length) {
-      setLocationIndex(locationIndex + 1);
-      setStep(locationList[locationIndex + 1].steps);
-      setUserLocations(locationList[locationIndex + 1].locations);
-      setDate(formatDate(locationList[locationIndex + 1].date));
-    }
-  };
-  const prevLocation = () => {
-    if (locationIndex - 1 >= 0) {
-      setLocationIndex(locationIndex - 1);
-      setStep(locationList[locationIndex - 1].steps);
-      setUserLocations(locationList[locationIndex - 1].locations);
-      setDate(formatDate(locationList[locationIndex - 1].date));
-    }
-  };
+
 
   return (
     <ScrollView style={{ backgroundColor: colors.background_c1 }}>
@@ -124,44 +110,6 @@ const ProfileView = () => {
             <Text className="mt-5 text-4xl" style={{ color: colors.text }}>{step}</Text>
           </View>
         </View>
-        {userLocations.length > 0 && isUser?
-        
-        <View className="items-center mt-5">
-          <Text className="absolute z-10 px-1" style={{ backgroundColor: colors.background_c1, color: colors.text }}>This session is at: </Text>
-          <View>
-            <Text className="mt-5 text-2xl" style={{ color: colors.text }}>{date}</Text>
-          </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '80%' }}>
-              <TouchableOpacity onPress={prevLocation} style={{ padding: 10, backgroundColor: colors.primary, borderRadius: 5 }}>
-                <Text style={{ color: colors.text }}>Previous</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={nextLocation} style={{ padding: 10, backgroundColor: colors.primary, borderRadius: 5 }}>
-                <Text style={{ color: colors.text }}>Next</Text>
-              </TouchableOpacity>
-            </View>
-            
-          <Text className="absolute z-10 px-1" style={{ backgroundColor: colors.background_c1, color: colors.text }}>This session is at: </Text>
-          {userLocations[0].latitude != 0 && userLocations[0].longitude != 0 ? (
-            <MapView
-              style={styles.map}
-              region={{
-                latitude: userLocations[0].latitude,
-                longitude: userLocations[0].longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }}
-              key={locationIndex} // Add key to force re-render
-            >
-              <Polyline coordinates={userLocations} strokeColor="blue" strokeWidth={3} />
-              {userLocations.map((loc, index) => (
-                <Marker key={index} coordinate={loc} />
-              ))}
-            </MapView>
-          ) : (
-            <Text style={styles.noLocationText}></Text>
-          )}
-        </View>:   null
-          }
       </View>
     </ScrollView>
   );

@@ -31,7 +31,6 @@ const Layout = () => {
       >
         <Drawer.Screen name={`[user]/viewProfile`} options={{ title: 'Your Profile' }} />
         <Drawer.Screen name="leaderboard/leaderboard" options={{ title: 'Leaderboard' }} />
-        <Drawer.Screen name="pedometer" options={{ title: 'Pedometer' }} />
         <Drawer.Screen name={`[user]/profile`} options={{ title: 'Settings' }} />
         <Drawer.Screen name="camera/index" options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
         <Drawer.Screen name="auth"options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />

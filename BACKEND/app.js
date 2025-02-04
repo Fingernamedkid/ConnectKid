@@ -19,7 +19,7 @@ app.post("/users/signin", async (req, res) => {
     if (!usernameOrEmail || !password) {
         return res.status(400).json({ error: "Username or email and password are required." });
     }
-
+    
     try {
         console.log(`End point request with user/email : ${usernameOrEmail} and pass : ${password}`)
         const user = await getUserByUsernameOrEmailAndPassword(usernameOrEmail, password);
