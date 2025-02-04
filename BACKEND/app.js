@@ -90,6 +90,7 @@ app.get("/users/:id", async (req, res) => {
         }
         // get user data
         const user = await getUserById(userId);
+        console.log(userId);
         if (!user) {
             return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${_id}`});
         }

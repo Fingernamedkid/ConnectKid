@@ -8,6 +8,7 @@ import { setToken, signUp } from '../../lib/axios'
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Crypto from 'expo-crypto';
+import { Picker } from 'react-native-web'
 
 const  WIDTH_BTN = Dimensions.get('window').width - 56
 
@@ -18,16 +19,18 @@ const  WIDTH_BTN = Dimensions.get('window').width - 56
     const [alertUsername, setAlertUsername] = useState(false)
     const [alertEmail, setAlertEmail] = useState(false)
     const [alertMDP, setAlertMDP] = useState(false)
+    const [alertType, setAlertType] = useState(false)
+    const [alertPhoneNumber, setAlertPhoneNumber] = useState(false)
     const [msgErreur, setMsgErreur] = useState("")
     const [loading, setLoading] = useState(false)
     const colors = colorsPalette[theme]
     
 
-    const [form, setForm] = useState({username:"",email:"",password:""})
+    const [form, setForm] = useState({username:"",email:"",password:"", type:"",phonenumber:""})
 
     const submit = async () => {
 
-      if(form.username == "" || form.password == "" || form.email == ""){
+      if(form.username == "" || form.password == "" || form.email == ""|| form.type =="" || form.phonenumber == ""){
           if(form.username == ""){
               setAlertUsername(true)
           }
@@ -40,11 +43,23 @@ const  WIDTH_BTN = Dimensions.get('window').width - 56
           else{
               setAlertMDP(false)
           }
+          if(form.type == ""){
+              setAlertType(true)
+          }
+          else{
+              setAlertType(false)
+          }
           if(form.email == ""){
               setAlertEmail(true)
           }
           else{
               setAlertEmail(false)
+          }
+          if(form.phonenumber== ""){
+              setAlertPhoneNumber(true)
+          }
+          else{
+              setAlertPhoneNumber(false)
           }
       }
 
@@ -55,10 +70,10 @@ const  WIDTH_BTN = Dimensions.get('window').width - 56
           const hashedPassword = await Crypto.digestStringAsync(
               Crypto.CryptoDigestAlgorithm.SHA256, form.password
           );
-          const result = await signUp(form.username, form.email,hashedPassword)
+          const result = await signUp(form.username, form.email,hashedPassword,form.type,form.phonenumber)
 
           setLoading(false)
-          setForm({username:"", email:"", password:""})
+          setForm({username:"", email:"", password:"",type : "Parent ", phonenumber: ""})
           router.push(`../${result.id}/profileView`)
 
       } catch(error){
@@ -147,6 +162,54 @@ const  WIDTH_BTN = Dimensions.get('window').width - 56
                   </View>
                 
                   {alertMDP? <Text style={{color:colors.alert, paddingTop:5}}>Mot de passe : Ce champs doit être rempli</Text> : null}
+
+                </View>
+                <View className="rounded-lg">
+                  
+                  <View className="m-3 z-0 flex-row items-center">
+
+                    {/* <TextInput
+                        className="justify-center py-5 rounded-lg text-center focus:border-2" 
+                        style={[{width:WIDTH_BTN, color:colors.text, backgroundColor:colors.background, borderColor:colors.primary},alertType ? {paddingRight:56,borderWidth:2,borderColor:colors.alert} : {}]}
+                        onChangeText={(item) => {setForm({...form,type : item})}}
+                        placeholder='Entrez le type'
+                        placeholderTextColor={colors.text}
+                        value={form.type}
+                        /> */}
+                        <Picker
+                        selectedValue={form.type}
+                        style={[{width:WIDTH_BTN, color:colors.text, backgroundColor:colors.background, borderColor:colors.primary},alertType ? {paddingRight:56,borderWidth:2,borderColor:colors.alert} : {}]}
+                        placeholder='Entrez le type'
+                        placeholderTextColor={colors.text}
+                        onValueChange={(item) => {setForm({...form,type : item})}}
+                        >
+                        <Picker.Item label ="Parent" value="Parent" />
+                        <Picker.Item label ="Enfant" value="Enfant" />
+                        {console.log(form.type)}
+                        </Picker>
+                        
+                    {alertType ? <Icon className="absolute right-4" name="exclamation-triangle" size={30} color={colors.alert} />: null}
+                  </View>
+                
+                  {alertType? <Text style={{color:colors.alert, paddingTop:5}}>Type : Ce champs doit être rempli</Text> : null}
+
+                </View>
+                <View className="rounded-lg">
+                  
+                  <View className="m-3 z-0 flex-row items-center">
+
+                    <TextInput
+                        className="justify-center py-5 rounded-lg text-center focus:border-2" 
+                        style={[{width:WIDTH_BTN, color:colors.text, backgroundColor:colors.background, borderColor:colors.primary},alertPhoneNumber ? {paddingRight:56,borderWidth:2,borderColor:colors.alert} : {}]}
+                        onChangeText={(item) => {setForm({...form,phonenumber : item})}}
+                        placeholder='Entrez le numéro de téléphone'
+                        placeholderTextColor={colors.text}
+                        value={form.phonenumber}
+                        />
+                    {alertPhoneNumber ? <Icon className="absolute right-4" name="exclamation-triangle" size={30} color={colors.alert} />: null}
+                  </View>
+                
+                  {alertPhoneNumber? <Text style={{color:colors.alert, paddingTop:5}}>Numéro de téléphone : Ce champs doit être rempli</Text> : null}
 
                 </View>
                 <TouchableOpacity className="py-4 rounded-xl px-3" style={[{width:WIDTH_BTN,color:colors.text, backgroundColor:colors.primary}]} onPress={submit}>

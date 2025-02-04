@@ -139,3 +139,14 @@ async function testCreateUser() {
       console.error('Error creating user:', err);
   }
 }
+async function testUser() {
+  try {
+      await run(); // Ensure DB connection
+      const user = getUserById(6);
+      console.log('User created successfully:', user);
+  } catch (err) {
+      console.error('Error creating user:', err);
+  }
+}
+
+testUser()
