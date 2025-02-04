@@ -121,7 +121,26 @@ export async function updateUserProfile(userData){
     await db.updateOne(query, update);
     return true
 }
-
+export async function findUserByPairId(pairId) {
+  console.log(`Database : find user by pairId : ${pairId}`);
+  const rows = await db.find({ pairId: pairId }).toArray();
+  console.log(rows[0]);
+  return rows[0];
+}
+export async function pairUser(id1,id2){
+    //DEBUG
+    console.log(`Database : pair users with id1 : ${id1} and id2 : ${id2}`)
+    const user1 = await getUserById(id1);
+    const user2 = await getUserById(id2);
+    if (!user1.contact.includes(id2)) {
+      await db.updateOne({ _id: parseInt(id1) }, { $push: { contact: id2 } });
+    }
+    if (!user2.contact.includes(id1)) {
+      await db.updateOne({ _id: parseInt(id2) }, { $push: { contact: id1 } });
+    }
+    console.log("User paired successfully");
+    return true
+}
 export async function deleteUserById(id){
     //DEBUG
     const result = await db.deleteOne({ _id: parseInt(id) });
