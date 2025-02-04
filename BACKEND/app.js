@@ -1,7 +1,8 @@
 import express from 'express';
-import {getUserByUsernameOrEmailAndPassword, createUser, getUserByUsernameOrEmail, run} from './database.js';
+import {getUserByUsernameOrEmailAndPassword, createUser,getUserById, findUserByPairId, getUserByUsernameOrEmail, pairUser, run} from './database.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
+import e from 'express';
 
 const SECRET_KEY = 'your_secret_key'; // Use a strong secret key in production
 
@@ -19,7 +20,7 @@ app.post("/users/signin", async (req, res) => {
     if (!usernameOrEmail || !password) {
         return res.status(400).json({ error: "Username or email and password are required." });
     }
-    
+
     try {
         console.log(`End point request with user/email : ${usernameOrEmail} and pass : ${password}`)
         const user = await getUserByUsernameOrEmailAndPassword(usernameOrEmail, password);
@@ -70,7 +71,41 @@ app.post("/users", async (req, res) => {
     }
 });
 
+app.post("/users/pair", async (req, res) => {
+    try{
+        
+        const token = req.headers['authorization']?.split(' ')[1];
+        if (!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY); // Synchronous verification
+        
+        console.log("decoding:" ,decoded.userId)
+        const user = await getUserById(decoded.userId);
+        if (!user) {
+            return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${decoded.userId}`});
+        }
+        const { pairId } = req.body;
+        if (!pairId) {
+            return res.status(400).json({ error: "Pair ID is required." });
+        }
+        const pair = await findUserByPairId(pairId);
+        if (!pair) {
+            return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${pairId}`});
+        }
+        const pairUserres = await pairUser(decoded.userId, pair._id);
+        if (!pairUserres) {
+            return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${pairId}`});
+        }else{
+        res.status(200).json({ message: "Success"}
 
+        );
+
+    }
+    }catch (error) {
+        
+        console.error('Error fetching profile Data: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    } 
+});
 
 app.get("/users/:id", async (req, res) => {
     try {
@@ -106,7 +141,7 @@ app.get("/users/:id", async (req, res) => {
             email: user.email || "",
             image64: user.image64 || "",
             phonenum: user.phonenum || "",
-            pairId: pairId || ""
+            pairId: user.pairId || ""
         });
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {
@@ -116,6 +151,8 @@ app.get("/users/:id", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
+
+
 
 
 app.put("/users/:id", async (req, res) => {

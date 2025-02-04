@@ -154,8 +154,10 @@ export async function fetchBlocks(){
     try{
         console.log(`axios.js : fetchBlocks`)
         const blocks = await api.get(`/blocks`)
-        if(blocks.status != 200){
-            throw new Error('axios.js : Failed to fetch blocks')
+        if (blocks.status === 404) {
+            throw new Error('axios.js : Data not found (404)');
+        } else if (blocks.status !== 200) {
+            throw new Error('axios.js : Failed to fetch blocks');
         }
         return blocks.data
     }catch(error){
@@ -168,7 +170,7 @@ export async function fetchUserInfo(id){
         const token = await getToken();
         console.log(`JWT token: ${token}`);
         console.log(`axios.js : fetchUserInfo`)
-        const userInfo = await api.get(`/user/${id}`)
+        const userInfo = await api.get(`/users/${id}`)
         if (userInfo.status == 409) {
             throw new Error('axios.js : Failed to fetch userInfo, user not found')
         }
@@ -178,6 +180,32 @@ export async function fetchUserInfo(id){
         return userInfo.data
     }catch(error){
         console.log("Error fetchingUserInfo : ",error)
+        throw new Error(error)
+    }
+}
+export async function pairWith( pairId){
+    try{
+        console.log(`axios.js : pairWith`)
+        const token = await getToken();
+        console.log(`JWT token: ${token}`);
+        console.log(`axios.js : pairing`)
+        const pairData = {
+            pairId: pairId
+        };
+        const response = await api.post(`/users/pair`, pairData);
+        if (response.status == 409) {
+            throw new Error('axios.js : Failed to fetch userInfo, user not found')
+        } else if (response.status == 404) {
+            throw new Error('axios.js : Cant find user to pair');
+        } else if (response.status != 200) {
+            throw new Error('axios.js : Failed to pair with user')
+        }
+        return response.data
+    }catch(error){
+        console.log("Error paring: ",error)
+        if (error.response && error.response.status === 404) {
+            return 'Failed to pair';
+        }
         throw new Error(error)
     }
 }

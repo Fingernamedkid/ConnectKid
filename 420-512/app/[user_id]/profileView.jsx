@@ -1,8 +1,8 @@
-import { Image, Text, View, ScrollView, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import { Image, Text, View, ScrollView, TouchableOpacity, Dimensions, TextInput } from 'react-native';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colorsPalette } from '../../assets/colorsPalette';
-import { fetchUserInfo } from '../../lib/axios';
+import { fetchUserInfo, pairWith } from '../../lib/axios';
 import { useGlobalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ProfileImageMapping } from '../../assets/images/profile/profileImageMapping';
@@ -18,16 +18,16 @@ const ProfileView = () => {
   const glob = useGlobalSearchParams();
   const router = useRouter();
   const refresh = useRef(false);
+  const [inputValue, setInputValue] = useState('');
+
   const {userId, setUserId} =  useUserId();
   // Default Data
   const [username, setUsername] = useState("Default");
   const [date, setDate] = useState('Default@abc.ca');
   const [description, setDescription] = useState('No description');
   const [profilePic, setProfilePic] = useState('');
-  const [step, setStep] = useState(0);
+  const [pairId, setpairId] = useState("");
   const [userLocations, setUserLocations] = useState([{ latitude: 0, longitude: 0 }]);
-  const [locationList, setLocationList] = useState([]);
-  const [locationIndex, setLocationIndex] = useState(0);
   const [isUser, setIsUser] = useState(false);
   // On mount effect
   const formatDate = (dateString) => {
@@ -57,17 +57,8 @@ const ProfileView = () => {
           setUsername(profileData.username);
           setDescription(profileData.description);
           setProfilePic(profileData.image64);
-          setStep(profileData.steps?profileData.steps:0);
-          if (profileData.routes && profileData.id == glob.user_id && profileData.routes.length > 0) {
-            setDate(formatDate(profileData.routes[0].date));
-            setUserLocations(profileData.routes[0].locations);
-            setLocationList(profileData.routes);
-            setLocationIndex(0);
-            setIsUser(true);
-          } else {
-            setUserLocations([{ latitude: 0, longitude: 0 }]);
-            setIsUser(false);
-          }
+          setpairId(profileData.pairId?profileData.pairId:0);
+          
         } catch (error) {
           console.log('Profile: Failed Loading profileData: ', error);
         }
@@ -75,7 +66,19 @@ const ProfileView = () => {
       loadProfileData();
     }, [glob.user_id]) // Only depend on user_id change
   );
-  
+
+  const handleButtonPress = async () => {
+    try {
+      const response = await pairWith(inputValue);
+      if (response == "Failed to pair") {
+        alert("Can't find user to pair");
+      } else {
+        alert('Data saved successfully');
+      }
+    } catch (error) {
+      console.log('Error saving data: ', error);
+    }
+  };
 
 
   return (
@@ -105,11 +108,38 @@ const ProfileView = () => {
         </View>
 
         <View className="items-center mt-5">
-          <Text className="absolute z-10 px-1" style={{ backgroundColor: colors.background_c1, color: colors.text }}>{userLocations.length > 0 && isUser?"This session steps count is" : "The longest trip of this user is"}</Text>
+          <Text className="absolute z-10 px-1" style={{ backgroundColor: colors.background_c1, color: colors.text }}>Your Pair Id is</Text>
           <View>
-            <Text className="mt-5 text-4xl" style={{ color: colors.text }}>{step}</Text>
+            <Text className="mt-5 text-4xl" style={{ color: colors.text }}>{pairId}</Text>
           </View>
         </View>
+      </View>
+      <View className="items-center mt-5">
+        <TextInput
+          style={{
+        height: 40,
+        borderColor: colors.primary,
+        borderWidth: 1,
+        width: '80%',
+        paddingHorizontal: 10,
+        color: colors.text,
+          }}
+          placeholder="Enter something"
+          placeholderTextColor={colors.text}
+          onChangeText={(text) => setInputValue(text)}
+          value={inputValue}
+        />
+        <TouchableOpacity
+          style={{
+        marginTop: 10,
+        backgroundColor: colors.primary,
+        padding: 10,
+        borderRadius: 5,
+          }}
+          onPress={handleButtonPress}
+        >
+          <Text style={{ color: colors.background_c1 }}>Submit</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
