@@ -122,6 +122,18 @@ export async function updateUserProfile(userData){
     return true
 }
 
+export async function getUserContacts(id){
+    //DEBUG
+    console.log(`Database : get user contacts with id : ${id}`)
+    const user = await getUserById(id);
+    let contacts = [];
+    for (let i = 0; i < user.contact.length; i++) {
+      let contact = await getUserById(user.contact[i]);
+      contacts.push(contact);
+    }
+    console.log(contacts);
+    return contacts;
+}
 export async function deleteUserById(id){
     //DEBUG
     const result = await db.deleteOne({ _id: parseInt(id) });

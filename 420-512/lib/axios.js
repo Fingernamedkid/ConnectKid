@@ -209,32 +209,21 @@ export async function pairWith( pairId){
         throw new Error(error)
     }
 }
-export async function fetchTop102Weeks(){
+
+export async function fetchContacts(){
     try{
-        console.log(`axios.js : fetchTop102Weeks`)
-        const top10 = await api.get(`/top10`)
-        if(top10.status != 200){
-            throw new Error('axios.js : Failed to fetch top10')
+        console.log(`axios.js : fetchContacts`)
+        const contacts = await api.get(`/users/contacts`)
+        if(contacts.status != 200){
+            throw new Error('axios.js : Failed to fetch contacts')
         }
-        return top10.data
+        return contacts.data
     }catch(error){
-        console.log("Error fetchingTop10 : ",error)
+        console.log("Error fetchingContacts : ",error)
         throw new Error(error)
     }
 }
-export async function fetchTop10Least() {
-    try {
-        console.log(`axios.js : fetchTop10Least`)
-        const top10Least = await api.get(`/top10-leaststeps`)
-        if (top10Least.status !== 200) {
-            throw new Error('axios.js : Failed to fetch top10 least steps')
-        }
-        return top10Least.data
-    } catch (error) {
-        console.log("Error fetchingTop10 Least: ", error)
-        throw new Error(error)
-    }
-}
+
 export async function sendDatas(listcoordnate, id, steps){
     try{
         console.log(`axios.js : sendDatas`)
