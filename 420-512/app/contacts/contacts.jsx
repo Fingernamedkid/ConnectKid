@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colorsPalette } from '../../assets/colorsPalette';
-import { useLeaderboard } from '../../contexts/LeaderboardContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
@@ -11,8 +10,6 @@ import { useCallback } from 'react';
 const Leaderboard = () => {
   const { theme } = useTheme();
   const colors = colorsPalette[theme];
-  const { blocks, leastBlocks, fetchLeaderboard, fetchLeastStepsLeaderboard } = useLeaderboard();
-  const [isLeastSteps, setIsLeastSteps] = useState(false); 
   const router = useRouter();
 
   useFocusEffect(
@@ -51,16 +48,13 @@ const Leaderboard = () => {
     );
   };
 
-  const toggleFilter = () => {
-    setIsLeastSteps(!isLeastSteps);
-  };
 
   return (
     <View className="h-full pb-16" style={{ backgroundColor: colors.background_c1 }}>
       <View className="w-full">
         <View className="justify-center items-center py-5">
           <Text className="text-4xl font-medium px-16" style={{ color: colors.lightText }}>
-            Leaderboard
+            Contact
           </Text>
         </View>
 

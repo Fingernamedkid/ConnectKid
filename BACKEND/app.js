@@ -1,5 +1,5 @@
 import express from 'express';
-import {getUserByUsernameOrEmailAndPassword, createUser,getUserById, findUserByPairId, getUserByUsernameOrEmail, pairUser, run} from './database.js';
+import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId, getUserByUsernameOrEmail, pairUser, run} from './database.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
 import e from 'express';
@@ -152,7 +152,26 @@ app.get("/users/:id", async (req, res) => {
     }
 });
 
-
+app.get("/contacts", async (req, res) => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) return res.status(403).send('Forbidden');
+    const decoded = jwt.verify(token, SECRET_KEY); // Synchronous verification
+    if (!decoded?.userId) {
+        return res.status(401).json({ error: "Unauthorized: Invalid token" });
+    }
+    try {
+        const contacts = await getUserContacts(decoded.userId);
+        if (!contacts) {
+            return res.status(404).json({ error: `Aucun conctact d'utilisateur pour l'id : ${decoded.userId}`});
+        }
+        res.status(200).json({
+            contacts: contacts
+        });
+    } catch (error) {
+        console.error('Error fetching contacts: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
 
 
 app.put("/users/:id", async (req, res) => {
