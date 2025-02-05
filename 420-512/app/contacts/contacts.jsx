@@ -11,16 +11,9 @@ const Leaderboard = () => {
   const { theme } = useTheme();
   const colors = colorsPalette[theme];
   const router = useRouter();
+  const [enfant, setEnfant] = ""
 
-  useFocusEffect(
-    useCallback(() => {
-      const intervalId = setInterval(() => {
-        fetchLeaderboard();
-      }, 60000);
-      return () => clearInterval(intervalId); 
-    }, [fetchLeaderboard])
-  );
-
+  
   const handleNamePress = (userId) => {
     console.log('Pressed on user:', userId, 'Redirecting to profile view of user ', userId);
     router.push(`/${userId}/profileView`);
@@ -49,6 +42,7 @@ const Leaderboard = () => {
   };
 
 
+  
   return (
     <View className="h-full pb-16" style={{ backgroundColor: colors.background_c1 }}>
       <View className="w-full">
@@ -66,12 +60,6 @@ const Leaderboard = () => {
         </View>
       </View>
       
-      <FlatList
-        data={isLeastSteps ? leastBlocks : blocks} 
-        keyExtractor={(item, index) => `${item._id}-${index}`}
-        renderItem={renderBlock}
-        className="flex-grow"
-      />
     </View>
   );
 };
