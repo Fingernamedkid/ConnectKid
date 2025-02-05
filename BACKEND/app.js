@@ -1,5 +1,5 @@
 import express from 'express';
-import {getUserByUsernameOrEmailAndPassword, createUser,getUserById, findUserByPairId, getUserByUsernameOrEmail, pairUser, run} from './database.js';
+import {getUserByUsernameOrEmailAndPassword, createUser,getUserById, findUserByPairId,getUserByUsernameOrEmail, pairUser, run} from './database.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
 import e from 'express';
@@ -17,6 +17,7 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }))
 app.post("/users/signin", async (req, res) => {
     const { usernameOrEmail, password } = req.body;
     console.log("Post : users/signin")
+    console.log(usernameOrEmail);
     if (!usernameOrEmail || !password) {
         return res.status(400).json({ error: "Username or email and password are required." });
     }
