@@ -32,7 +32,7 @@ const index = () => {
     return (
         <View className={`flex-1 justify-evenly items-center`} style={{backgroundColor:colors.background_c1}} >
             <Image source={logo} style={{width: 200, height: 200}} />
-            <Text className={`text-6xl font-bold tracking-[2px] text-center`} style={{color:colors.primary}} >FitTrackr</Text>
+            <Text className={`text-6xl font-bold tracking-[2px] text-center`} style={{color:colors.primary}} >ConnectKid</Text>
             <TouchableOpacity className={`rounded p-6`} style={{backgroundColor:colors.primary}} onPress={() => { router.push("./auth/signin")}}>
                 <Text className={`text-4xl`} style={{color:colors.lightText}} >Sign-in</Text>
             </TouchableOpacity>

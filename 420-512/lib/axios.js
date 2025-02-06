@@ -213,11 +213,11 @@ export async function pairWith( pairId){
 export async function fetchContacts(){
     try{
         console.log(`axios.js : fetchContacts`)
-        const contacts = await api.get(`/users/contacts`)
+        const contacts = await api.get(`/contacts`)
         if(contacts.status != 200){
             throw new Error('axios.js : Failed to fetch contacts')
         }
-        return contacts.data
+        return contacts.data.contacts
     }catch(error){
         console.log("Error fetchingContacts : ",error)
         throw new Error(error)

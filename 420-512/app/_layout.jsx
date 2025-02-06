@@ -12,9 +12,7 @@ const RootLayout = () => {
   return (
     <ThemeProvider>
       <UserIdProvider>
-        <LeaderboardProvider> 
           <Layout />
-        </LeaderboardProvider>
       </UserIdProvider>
     </ThemeProvider>
   );
@@ -30,7 +28,7 @@ const Layout = () => {
         }}
       >
         <Drawer.Screen name={`[user]/viewProfile`} options={{ title: 'Your Profile' }} />
-        <Drawer.Screen name="leaderboard/leaderboard" options={{ title: 'Leaderboard' }} />
+        <Drawer.Screen name="contacts/contacts" options={{ title: 'Contact' }} />
         <Drawer.Screen name={`[user]/profile`} options={{ title: 'Settings' }} />
         <Drawer.Screen name="camera/index" options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
         <Drawer.Screen name="auth"options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />

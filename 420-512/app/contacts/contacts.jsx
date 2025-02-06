@@ -6,26 +6,50 @@ import { colorsPalette } from '../../assets/colorsPalette';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
-
-const Leaderboard = () => {
+import { fetchContacts } from '../../lib/axios';
+const Conatct = () => {
+  useEffect(() => {
+    const checkJwt = async () => {
+      try {
+        const token = await AsyncStorage.getItem('jwt');
+        if (!token) {
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Failed to check JWT:', error);
+      }
+    };
+    checkJwt();
+  }, []);
   const { theme } = useTheme();
   const colors = colorsPalette[theme];
   const router = useRouter();
-  const [enfant, setEnfant] = ""
-
+  const [contacts, setContacts] = useState([]);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchContact = async () => {
+        try {
+          const fetchcontacts = await fetchContacts();
+          setContacts(fetchcontacts);
+          console.log(contacts)
+        } catch (error) {
+          console.error('Failed to load contacts:', error);
+        }
+      };
+      fetchContact();
+    }, [])
+  );
   
   const handleNamePress = (userId) => {
     console.log('Pressed on user:', userId, 'Redirecting to profile view of user ', userId);
-    router.push(`/${userId}/profileView`);
+    router.push(`/message/${userId}`);
   };
 
-  const renderBlock = ({ item, index }) => {
+  const renderBlock = ({ item }) => {
     return (
       <TouchableOpacity onPress={() => handleNamePress(item._id)}>
         <View className="flex-row items-center w-full py-2 px-4">
-          <Text className="mr-2" style={{ color: colors.lightText }}>
-            {index + 1}
-          </Text>
+          
           <Image
             className="w-16 h-16 rounded-full"
             source={{ uri: `data:image/jpg;base64,${item.image64}` }}
@@ -33,9 +57,7 @@ const Leaderboard = () => {
           <Text className="ml-3 flex-1" style={{ color: colors.lightText }}>
             {item.username}
           </Text>
-          <Text className="ml-3" style={{ color: colors.lightText }}>
-            {item.steps}
-          </Text>
+          
         </View>
       </TouchableOpacity>
     );
@@ -51,17 +73,15 @@ const Leaderboard = () => {
             Contact
           </Text>
         </View>
-
-        <View className="flex-row justify-center py-3">
-          <Button
-            title={isLeastSteps ? "Show Top 10 Most Steps" : "Show Top 10 Least Steps"}
-            onPress={toggleFilter}
-          />
-        </View>
+        <FlatList
+          data={contacts}
+          renderItem={renderBlock}
+          keyExtractor={(item) => item._id}/>
+        
       </View>
       
     </View>
   );
 };
 
-export default Leaderboard;
+export default Conatct;

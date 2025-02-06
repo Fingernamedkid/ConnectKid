@@ -10,6 +10,18 @@ import { StyleSheet } from 'react-native';
 import { useUserId } from '../../contexts/UserIdContext';
 const WIDTH = Dimensions.get('window').width;
 
+const checkJwtInAsyncStorage = async () => {
+  try {
+    const jwt = await AsyncStorage.getItem('jwt');
+    if (jwt !== null) {
+      console.log('JWT found in AsyncStorage:', jwt);
+    } else {
+      console.log('No JWT found in AsyncStorage');
+    }
+  } catch (error) {
+    console.log('Error checking JWT in AsyncStorage:', error);
+  }
+};
 
 
 const ProfileView = () => {
@@ -19,7 +31,10 @@ const ProfileView = () => {
   const router = useRouter();
   const refresh = useRef(false);
   const [inputValue, setInputValue] = useState('');
-
+  useEffect(() => {
+    checkJwtInAsyncStorage();
+  }, []);
+  
   const {userId, setUserId} =  useUserId();
   // Default Data
   const [username, setUsername] = useState("Default");

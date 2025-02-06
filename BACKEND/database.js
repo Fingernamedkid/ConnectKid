@@ -160,15 +160,3 @@ export async function deleteUserById(id){
     // Return the number of deleted documents (equivalent to affectedRows in SQL)
     return result.deletedCount;
 }
-
-async function testCreateUser() {
-  try {
-      await run(); // Ensure DB connection
-      const user = await createUser('test@example.com', 'testuser', 'password123');
-      console.log('User created successfully:', user);
-  } catch (err) {
-      console.error('Error creating user:', err);
-  }
-}
-
-
