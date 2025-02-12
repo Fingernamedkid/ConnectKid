@@ -2,7 +2,26 @@ import dotenv from 'dotenv';
 import { MongoClient,ServerApiVersion } from 'mongodb';
 import { encryptPassword, decryptPassword } from './password.js';
 // -----------------------------------------          Config          ----------------------------------------------
+// const conversationSchema = {
+//   _id: ObjectId,
+//   participants: [Number], 
+//   lastMessage: {
+//     content: String,
+//     sender: Number,
+//     timestamp: Date
+//   },
+//   createdAt: Date,
+//   updatedAt: Date
+// }
 
+// const messageSchema = {
+//   _id: ObjectId,
+//   conversationId: ObjectId,
+//   sender: Number, 
+//   content: String,
+//   timestamp: Date,
+//   read: Boolean
+// }
 dotenv.config({ path: './setup.env' });
 const uri = process.env.URL
 const bd = process.env.DATABASE
@@ -15,17 +34,51 @@ const client = new MongoClient(uri, {
     }
   });
 let db;
+let conversations;
+let message; 
 export async function run() {
     try {
       await client.connect();
       await client.db(bd).command({ ping: 1 });
       db = client.db(bd).collection(coll);
+      conversations = client.db(bd).collection('conversations');
+      message = client.db(bd).collection('messages')
+      await conversations.createIndex({ participants: 1 });
+      await message.createIndex({ conversationId: 1 });
+      await message.createIndex({ sender: 1 });
+      await message.createIndex({ timestamp: -1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } catch(exception){
         console.log(exception)
     }
   }
 
+//   export async function run() {
+//     try {
+//         await client.connect();
+//         await client.db(bd).command({ ping: 1 });
+        
+//         // Initialiser les collections
+//         const database = client.db(bd);
+//         usersCollection = database.collection(coll);
+//         conversationsCollection = database.collection('conversations');
+//         messagesCollection = database.collection('messages');
+
+//         // Créer les index nécessaires
+//         await conversationsCollection.createIndex({ participants: 1 });
+//         await messagesCollection.createIndex({ conversationId: 1 });
+//         await messagesCollection.createIndex({ sender: 1 });
+//         await messagesCollection.createIndex({ timestamp: -1 });
+
+//         console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        
+//         // Rendre la collection users disponible pour les fonctions existantes
+//         db = usersCollection;
+        
+//     } catch(exception) {
+//         console.log(exception);
+//     }
+// }
 // -----------------------------------------          Functions          ----------------------------------------------
 
 export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, password) {
@@ -172,3 +225,95 @@ async function testCreateUser() {
 }
 
 
+
+
+export async function createConversation(participant1Id, participant2Id) {
+  console.log("Creation d'une conversation")
+  
+  const existingConv = await conversations.findOne({
+    participants: { 
+      $all: [parseInt(participant1Id), parseInt(participant2Id)] 
+    }
+  });
+
+  if (existingConv) {
+    return existingConv;
+  }
+console.log('hi')
+  const newConversation = {
+    participants: [parseInt(participant1Id), parseInt(participant2Id)],
+    lastMessage: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  const result = await conversations.insertOne(newConversation);
+  return result;
+}
+
+
+export async function sendMessage(senderId, conversationId, content) {
+  const messages = client.db(bd).collection('messages');
+  const conversations = client.db(bd).collection('conversations');
+
+  const message = {
+    conversationId: conversationId,
+    sender: parseInt(senderId),
+    content: content,
+    timestamp: new Date(),
+    read: false
+  };
+
+  await messages.insertOne(message);
+
+
+  await conversations.updateOne(
+    { _id: conversationId },
+    { 
+      $set: {
+        lastMessage: {
+          content: content,
+          sender: parseInt(senderId),
+          timestamp: new Date()
+        },
+        updatedAt: new Date()
+      }
+    }
+  );
+
+  return message;
+}
+
+
+export async function getConversationMessages(conversationId, limit = 50) {
+
+  
+  return await messages.find({ conversationId: conversationId })
+    .sort({ timestamp: -1 })
+    .limit(limit)
+    .toArray();
+}
+
+
+export async function getUserConversations(userId) {
+  const conversations = client.db(bd).collection('conversations');
+  
+  return await conversations.find({
+    participants: parseInt(userId)
+  }).sort({ updatedAt: -1 }).toArray();
+}
+
+
+export async function markMessagesAsRead(conversationId, userId) {
+  const messages = client.db(bd).collection('messages');
+  
+  await messages.updateMany(
+    {
+      conversationId: conversationId,
+      sender: { $ne: parseInt(userId) },
+      read: false
+    },
+    { $set: { read: true } }
+  );
+}
+createConversation(1,2);

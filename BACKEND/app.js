@@ -270,7 +270,17 @@ app.post("/users/authenticate", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
-
+app.post('/conversation/add', async (req, res ) =>{
+    try{
+        const token = req.headers['authorization'].split('')[1];
+        if(!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (!decoded?.userId) {
+            return res.status(409).json({ error: "Forbidden: badToken" });
+        }
+        
+    }
+})
 
 app.use((err, req, res, next) => {
     console.error(err.stack)
