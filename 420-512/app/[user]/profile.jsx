@@ -24,9 +24,12 @@ const Profile = () => {
   // Default Data
   const [username, setUsername] = useState("Default");
   const [email, setEmail] = useState('Default@abc.ca');
-  const [description, setDescription] = useState('No description');
+  const [number, setNumber] = useState('');
+  const [password, setPassword] = useState('');
   const [profilePic, setProfilePic] = useState('');
-  const [step, setStep] = useState(0);
+  const [pairId, setpairId] = useState("PairId");
+  const [type, setType]= useState("Parent")
+  
 
   // States
   const [isEditing, setIsEditing] = useState(false);
@@ -59,7 +62,6 @@ const Profile = () => {
   };
 
   useEffect(() => {
-
     const loadProfileData = async () => {
       if (!glob.user && !userId) {
         console.log('Profile: userId is undefined');
@@ -71,7 +73,12 @@ const Profile = () => {
         if (!profileData) throw new Error('Failed fetching data -> no Data');
         setUsername(profileData.username);
         setEmail(profileData.email);
-        setDescription(profileData.description);
+        setProfilePic(profileData.image64);
+        setNumber(profileData.phonenum)
+        setpairId(profileData.pairId?profileData.pairId:0);
+        setType(profileData.type )
+        
+    
         if (profileData.image64) {
           console.log('Profile: Profile picture loaded');
           setProfilePic(profileData.image64);
@@ -79,12 +86,9 @@ const Profile = () => {
         if(userId) {
           await AsyncStorage.setItem('user_id', String(userId));
         }
-        if (profileData.steps != 0) {
-          setStep(profileData.steps);
-        }
       } catch (error) {
         console.log('Profile: Failed Loading profileData: ', error);
-        router.push("/auth/signin");
+        // router.push("/auth/signin");
       }
     };
     loadProfileData();
@@ -136,8 +140,8 @@ const Profile = () => {
       const userData = {
         username,
         email,
+        number,
         profilePic: profilePic || '',
-        description,
         id: userId || glob.user
       };
       try {
@@ -189,9 +193,10 @@ const Profile = () => {
 
   return (
     <>
-      <ScrollView style={{ backgroundColor: colors.background_c1 }}>
-        <View className="w-full">
-          <View className="justify-center items-center py-5">
+      <ScrollView style={{ backgroundColor: colors.background_c1 }} className='justify-center items-center'>
+
+        <View className="bg-white m-4 p-2 rounded-lg shadow-lg border border-gray-300"  style={{ height : 900, width : 600 }} >
+          <View className="justify-center items-center py-3">
             <TouchableOpacity
               onPress={() => { refresh.current = true; router.push("../camera"); }}
               className="rounded-full"
@@ -204,10 +209,10 @@ const Profile = () => {
                   <Text className="text-white font-bold">No profile picture</Text>
                 </View>}
             </TouchableOpacity>
-            <View className="mt-10">
+            <View className="mt-1">
               {!isEditing ? 
-                <Text className="text-4xl font-medium px-16" style={{ color: colors.primary }}>{username}</Text>:
-                <TextInput className="justify-center text-center text-4xl font-medium px-16" style={[{ color: colors.primary, backgroundColor: colors.background_c1 }]} onChangeText={setUsername}
+                <Text className="text-4xl font-medium" style={{ color: colors.primary }}>{username}</Text>:
+                <TextInput className="justify-center text-center text-4xl font-medium px-16 rounded-md color-slate-400" style={[{ color: colors.primary, backgroundColor: colors.background_c1 }]} onChangeText={setUsername}
                   placeholder="Entrez l'identifiant"
                   placeholderTextColor={colors.secondary}
                   value={username}/>
@@ -216,9 +221,11 @@ const Profile = () => {
           </View>
           <View className="items-center">
             <View className="items-center rounded-md w-2/4" style={{ borderColor: isEditing ? colors.lightAlert : colors.primary }}>
-              <Text className="absolute z-10 -top-2.5 left-3 px-1" style={{ backgroundColor: colors.background_c1, color: colors.text }}>Email: </Text>
+              <Text className="text-xl font-semibold justify-start p-2" style={{color: colors.text }}>Email: </Text>
               {!isEditing ?
-                <Text className="py-3 px-2" style={{ color: colors.text }}>{email}</Text>
+                <View className ="border rounded-md  border-gray-300" style={{width : 300}}>
+                  <Text className="py-3 px-2" style={{ color: colors.text }}>{email}</Text>
+                </View>
                 :
                 <TextInput
                   className="justify-center z-0 py-5 rounded-lg text-center w-full"
@@ -230,38 +237,53 @@ const Profile = () => {
                 />}
             </View>
           </View>
+
           <View className="items-center mt-5">
             <View className="items-center rounded-md w-2/4" style={{ borderColor: isEditing ? colors.lightAlert : colors.primary }}>
-              <Text className="absolute z-10 -top-2.5 left-3 px-1" style={{ backgroundColor: colors.background_c1, color: colors.text }}>Description : </Text>
+              <Text className="text-xl font-semibold p-2" style={{ color: colors.text }}>Username : </Text>
               {!isEditing ?
-                <Text className="py-3 px-2" style={{ color: colors.text }}>{description}</Text>
+                <View className ="border rounded-md border-gray-300" style={{width : 300}}>
+                <Text className="py-3 px-2"  style={{ color: colors.text }}>{username}</Text>
+                </View>
                 :
                 <TextInput
-                  className="justify-center z-0 py-5 rounded-lg text-center w-full"
+                  className="justify-center z-0 py-5 rounded-lg text-center w-full "
                   style={[{ color: colors.text, backgroundColor: colors.background_c1 }]}
-                  onChangeText={setDescription}
-                  placeholder="Entrez la description"
+                  onChangeText={setUsername}
+                  placeholder="Entrez la username"
                   placeholderTextColor={colors.secondary}
-                  value={description}
+                  value={username}
                 />
               }
             </View>
           </View>
+          
+          <View className="items-center">
+            <View className="items-center rounded-md w-2/4" style={{ borderColor: isEditing ? colors.lightAlert : colors.primary }}>
+              <Text className="text-xl font-semibold p-2" style={{ color: colors.text }}>Role : </Text>
+              <View className ="border rounded-md p-2  border-gray-300" style={{width : 300}}>
+                {type}
+              </View>
+            </View>
+          </View>
           <View className="items-center mt-5">
-            <Text className="absolute z-10 px-1" style={{ backgroundColor: colors.background_c1, color: colors.text }}>Last session steps count</Text>
-            <View>
-              <Text className="mt-5 text-4xl" style={{ color: colors.text }}>{step}</Text>
+            <View className="items-center rounded-md w-2/4" style={{ borderColor: isEditing ? colors.lightAlert : colors.primary }}>
+              <Text className="text-xl font-semibold p-2" style={{ color: colors.text }}> Your Pair Id : </Text>
+              <View className ="border rounded-md p-2  border-gray-300 justify-center" style={{width : 75}}>
+                {pairId}
+              </View>
+              
             </View>
           </View>
           <View className="w-full items-center">
             <View className="flex-row justify-center items-center py-10 gap-5">
-              <Animated.View style={[spinStyle, { width: '33%' }]}>
-                <TouchableOpacity onPress={handleLogout} className="flex-row items-center justify-center w-full p-2 rounded-md" style={{ backgroundColor: colors.lightAlert }}>
+          
+                <TouchableOpacity onPress={handleLogout} className="flex-row items-center w-full justify-center h-full  p-2 rounded-md" style={{ backgroundColor: colors.lightAlert }}>
                   <Text className="pr-1" style={{ color: colors.lightText }}>Déconnexion</Text>
-                  <Icon name="sign-out-alt" size={30} color={colors.lightText} />
+                  <Icon name="sign-out-alt" size={20} color={colors.lightText} />
                 </TouchableOpacity>
-              </Animated.View>
-              <TouchableOpacity onPress={() => { setIsEditing(prev => !prev); }} className="flex-row items-center justify-center w-1/3 p-2 rounded-md" style={{ backgroundColor: colors.lightAlert }}>
+              
+              <TouchableOpacity onPress={() => { setIsEditing(prev => !prev); }} className="flex-row items-center w-full  justify-center  p-2 rounded-md" style={{ backgroundColor: colors.lightAlert }}>
                 <Text className="pr-1" style={{ color: colors.lightText }}>Modifier</Text>
                 <Icon name="edit" size={30} color={colors.lightText} />
               </TouchableOpacity>
