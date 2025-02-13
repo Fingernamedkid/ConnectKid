@@ -153,7 +153,55 @@ app.get("/users/:id", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
+app.post ("/devices", async (req, res) => {
+    try {
+        const { userId, piId } = req.body;
+        const user = await get(decoded.userId);
+        if (!user) {
+            return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${decoded.userId}`});
+        }
+        if (!userId || !piId) {
+            return res.status(400).json({ error: "Request missing parameters" });
+        }
+        const decoded = jwt.verify(token, SECRET_KEY); // Synchronous verification
+        if (!decoded?.userId) {
+            return res.status(401).json({ error: "Unauthorized: Invalid token" });
+        }
+        if (decoded.userId != userId) {
+            return res.status(409).json({ error: "Forbidden: you are not allowed to get this info" });
+        }
+        //TODO
+        //await addDevice(userId, piId);
+        res.status(200).json({
+            message: "Success"
+        });
+    } catch (error) {
+        console.error('Error fetching profile Data: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
 
+app.post("/users/status", async (req, res) => {
+    try {
+        const { userId, status, piId } = req.body;
+        const user = await get(userId);
+        if (!user) {
+            return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${userId}`});
+        }
+        if (!userId || !status || !piId) {
+            return res.status(400).json({ error: "Request missing parameters" });
+        }
+
+        //TODO: verify userid with piId. If in the table location, userId is in the piId, then update the status
+        //TODO: update user status
+        res.status(200).json({
+            message: "Success"
+        });
+    } catch (error) {
+        console.error('Error fetching profile Data: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
 app.get("/contacts", async (req, res) => {
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) return res.status(403).send('Forbidden');

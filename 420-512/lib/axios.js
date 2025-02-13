@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
+
 export const api = axios.create({
     baseURL:IP_BACKEND
 })
@@ -61,6 +62,27 @@ export async function signIn(usernameOrEmail, password){
         await setToken(userAuth.data.token);
 
         return userAuth.data
+    } catch (error){
+        throw new Error(error)
+    }
+}
+export async function status(status, id, piId){
+    try {
+        console.log(`Trying to update status with status: ${status}, id: ${id}, pairId: ${piId}`);
+        const statusData = {
+            status: status,
+            id: id,
+            pairId: piId
+        };
+        const updateData = await api.post(`/users/status`, statusData,{
+            header:{
+                Authorization: 'none',
+            },
+        });
+        if(!(updateData.status == 200)) throw Error;
+        else{
+            return updateData.data
+        }
     } catch (error){
         throw new Error(error)
     }
@@ -264,3 +286,6 @@ export async function sendDatas(listcoordnate, id, steps){
         throw new Error(error)
     }
 }
+
+// Server to receive HTTP requests on port 3001
+

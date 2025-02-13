@@ -6,7 +6,6 @@ import app from '../app.js';
 import { getUserByUsernameOrEmailAndPassword } from '../database.js';
 import jwt from 'jsonwebtoken';
 import { run } from '../database.js';
-import { stop } from '../app.js';
 const { expect } = chai;
 chai.use(chaiHttp);
 let jwtToken;
