@@ -35,18 +35,18 @@ const client = new MongoClient(uri, {
   });
 let db;
 let conversations;
-let message; 
+let messages; 
 export async function run() {
     try {
       await client.connect();
       await client.db(bd).command({ ping: 1 });
       db = client.db(bd).collection(coll);
       conversations = client.db(bd).collection('conversations');
-      message = client.db(bd).collection('messages')
+      messages = client.db(bd).collection('messages')
       await conversations.createIndex({ participants: 1 });
-      await message.createIndex({ conversationId: 1 });
-      await message.createIndex({ sender: 1 });
-      await message.createIndex({ timestamp: -1 });
+      await messages.createIndex({ conversationId: 1 });
+      await messages.createIndex({ sender: 1 });
+      await messages.createIndex({ timestamp: -1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } catch(exception){
         console.log(exception)
@@ -239,7 +239,7 @@ export async function createConversation(participant1Id, participant2Id) {
   if (existingConv) {
     return existingConv;
   }
-console.log('hi')
+
   const newConversation = {
     participants: [parseInt(participant1Id), parseInt(participant2Id)],
     lastMessage: null,
@@ -253,8 +253,6 @@ console.log('hi')
 
 
 export async function sendMessage(senderId, conversationId, content) {
-  const messages = client.db(bd).collection('messages');
-  const conversations = client.db(bd).collection('conversations');
 
   const message = {
     conversationId: conversationId,
@@ -296,7 +294,7 @@ export async function getConversationMessages(conversationId, limit = 50) {
 
 
 export async function getUserConversations(userId) {
-  const conversations = client.db(bd).collection('conversations');
+
   
   return await conversations.find({
     participants: parseInt(userId)
@@ -305,7 +303,7 @@ export async function getUserConversations(userId) {
 
 
 export async function markMessagesAsRead(conversationId, userId) {
-  const messages = client.db(bd).collection('messages');
+
   
   await messages.updateMany(
     {

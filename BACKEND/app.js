@@ -1,5 +1,5 @@
 import express from 'express';
-import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId, getUserByUsernameOrEmail, pairUser, run} from './database.js';
+import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId, getUserByUsernameOrEmail, pairUser, run, createConversation, getUserConversations, sendMessage} from './database.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
 import e from 'express';
@@ -272,12 +272,66 @@ app.post("/users/authenticate", async (req, res) => {
 });
 app.post('/conversation/add', async (req, res ) =>{
     try{
+        const {participant1, participant2} = req.body;
+
         const token = req.headers['authorization'].split('')[1];
         if(!token) return res.status(403).send('Forbidden');
         const decoded = jwt.verify(token, SECRET_KEY);
         if (!decoded?.userId) {
             return res.status(409).json({ error: "Forbidden: badToken" });
         }
+
+        const conversation = await createConversation(participant1, participant2);
+        res.status(200).json([{
+           message : "Succès"
+
+        }])
+        
+    } catch(error){
+        console.error('Error fetching creating a conversation: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+
+    }
+})
+app.get('/conversation/get', async (req, res) =>{
+    try{
+        const {userId} = req.body;    
+
+        const token = req.headers['authorization'].split('')[1];
+        if(!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (!decoded?.userId) {
+            return res.status(409).json({ error: "Forbidden: badToken" });
+        }
+
+        const conversation =await getUserConversations(userId);
+        res.status(200).json([{
+            id : conversation._id,
+            participants : conversation.participants,
+            lasMessage : null,
+            createdAt : conversation.createdAt,
+            updatedAt : conversation.updatedAt
+
+        }])
+
+    } catch(error){
+        console.error('Error fetching fetching a conversation: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+})
+app.post('/conversations/sendMessage',async (req, res) =>{
+    try {
+        const {senderId, conversationId, contenue} = req.body;    
+
+        const token = req.headers['authorization'].split('')[1];
+        if(!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (!decoded?.userId) {
+            return res.status(409).json({ error: "Forbidden: badToken" });
+        }
+        
+        const message =  await sendMessage()
+    } catch (error) {
         
     }
 })
