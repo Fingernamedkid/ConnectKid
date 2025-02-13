@@ -122,7 +122,29 @@ export async function updateProfileData(userData){
         throw new Error(error)
     }
 } 
-
+export async function getLed(){
+    try {
+        console.log(`Trying to get led`);
+        const ledData = await api.get(`/leds`);
+        if(!(ledData.status == 200)) throw Error;
+        
+        return ledData.data
+    } catch (error){
+        throw new Error(error)
+    }
+}
+export async function turnLed(state){
+    try {
+        console.log(`Trying to turn on led`);
+        const body = { state: state };
+        const updateData = await api.post(`/leds`,body);
+        if(!(updateData.status == 200)) throw Error;
+        
+        return updateData.data
+    } catch (error){
+        throw new Error(error)
+    }
+}
 export async function deleteUserById(id){
     try{
         console.log(`axios.js : delete user with id : ${id}`)

@@ -270,7 +270,52 @@ app.post("/users/authenticate", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
+app.get("/leds", async (req, res) => {
+    try {
+        const token = req.headers['authorization']?.split(' ')[1];
+        if (!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY); // Synchronous verification
+        if (!decoded?.userId) {
+            return res.status(409).json({ error: "Forbidden: badToken" });
+        }
+        const response = await fetch('http://192.168.0.18:5000/led');
+        const data = await response.json();
+        console.log(data);
+        return res.status(200).json({ state: data.state });
+    } catch (error) {
+        console.error('Error during authenticate: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+app.post("/leds", async (req, res) => {
+    try {
+        const {state} = req.body;
+        const token = req.headers['authorization']?.split(' ')[1];
+        if (!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY); // Synchronous verification
+        if (!decoded?.userId) {
+            return res.status(409).json({ error: "Forbidden: badToken" });
+        }
+        const response = await fetch('http://192.168.0.18:5000/led', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ state })
+        });
 
+        if (!response.ok) {
+            return res.status(response.status).json({ error: 'Failed to update LED state' });
+        }
+
+        const responseData = "Success";
+        res.status(200).json(responseData);
+    } catch (error) {
+        console.error('Error during authenticate: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+);
 
 app.use((err, req, res, next) => {
     console.error(err.stack)

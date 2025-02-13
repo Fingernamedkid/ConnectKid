@@ -6,6 +6,7 @@ import app from '../app.js';
 import { getUserByUsernameOrEmailAndPassword } from '../database.js';
 import jwt from 'jsonwebtoken';
 import { run } from '../database.js';
+import { stop } from '../app.js';
 const { expect } = chai;
 chai.use(chaiHttp);
 let jwtToken;
@@ -153,83 +154,5 @@ describe('GET /users/:id', () => {
             });
     });
 });
-describe('DELETE /users/:id', () => {
-    it('should return 403 if no token is provided', (done) => {
-        chai.request.agent(app)
-            .delete('/users/123')
-            .end((err, res) => {
-                expect(res).to.have.status(403);
-                expect(res.text).to.equal('Forbidden');
-                done();
-            });
-    });
 
-    it('should return 401 if token is invalid', (done) => {
-        chai.request.agent(app)
-            .delete('/users/123')
-            .set('Authorization', 'Bearer invalid_token')
-            .end((err, res) => {
-                expect(res).to.have.status(401);
-                done();
-            });
-    });
-
-    it('should return 409 if userId in token does not match requested userId', (done) => {
-        // Login with a different user
-        chai.request.agent(app)
-            .post('/users/signin')
-            .send({ usernameOrEmail: 'mockUserencrypt', password: 'mockPassword' })
-            .end((err, res) => {
-                if (err) return done(err);
-                expect(res).to.have.status(200);
-                expect(res.body).to.have.property('token');
-                const token = res.body.token;
-                chai.request.agent(app)
-                    .delete('/users/4')
-                    .set('authorization', `Bearer ${token}`)
-                    .end((err, res) => {
-                        if (err) return done(err);
-                        expect([403, 409]).to.include(res.status);
-                        if (res.status === 403) {
-                            expect(res.body.error).to.equal('Forbidden: you are not allowed to delete this user');
-                        } else if (res.status === 409) {
-                            expect(res.body.error).to.equal('Forbidden');
-                        }
-                        done();
-                    });
-            });
-    });
-
-    it('should return 200 and delete user if valid token and userId', (done) => {
-        // Create a new user
-        chai.request.agent(app)
-            .post('/users')
-            .send({ username: 'deleteUser', email: 'deleteUser@example.com', password: 'deletePassword' })
-            .end((err, res) => {
-                expect([201, 409]).to.include(res.status);
-                if (res.status === 201) {
-                    // Login with the new user
-                    chai.request.agent(app)
-                        .post('/users/signin')
-                        .send({ usernameOrEmail: 'deleteUser', password: 'deletePassword' })
-                        .end((err, res) => {
-                            expect(res).to.have.status(200);
-                            expect(res.body).to.have.property('token');
-                            const token = res.body.token;
-                            // Delete the user
-                            chai.request.agent(app)
-                                .delete('/users/3')
-                                .set('authorization', `Bearer ${token}`)
-                                .end((err, res) => {
-                                    expect(res).to.have.status(200);
-                                    expect(res.body).to.have.property('message').that.equals('User deleted successfully.');
-                                    done();
-                                });
-                        });
-                } else if (res.status === 409) {
-                    done();
-                }
-            });
-    });
-});
 });

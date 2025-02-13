@@ -2,7 +2,7 @@ import { Image, Text, View, ScrollView, TouchableOpacity, Dimensions, TextInput 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colorsPalette } from '../../assets/colorsPalette';
-import { fetchUserInfo, pairWith } from '../../lib/axios';
+import { fetchUserInfo, pairWith, turnLed, getLed} from '../../lib/axios';
 import { useGlobalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ProfileImageMapping } from '../../assets/images/profile/profileImageMapping';
@@ -44,6 +44,7 @@ const ProfileView = () => {
   const [pairId, setpairId] = useState("");
   const [userLocations, setUserLocations] = useState([{ latitude: 0, longitude: 0 }]);
   const [isUser, setIsUser] = useState(false);
+  const [state, setState] = useState("");
   // On mount effect
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -57,7 +58,6 @@ const ProfileView = () => {
       setUserId(glob.user_id);
     }
   }, [glob.user_id]);
-
   useFocusEffect(
     useCallback(() => {
       const loadProfileData = async () => {
@@ -78,9 +78,34 @@ const ProfileView = () => {
           console.log('Profile: Failed Loading profileData: ', error);
         }
       };
+      const loadLedInfo = async () => {
+        try {
+          const response = await getLed();
+          console.log(response)
+          setState(response.state);
+        } catch (error) {
+          console.log('Error getting LED state: ', error);
+        }
+      };
+      loadLedInfo();
       loadProfileData();
     }, [glob.user_id]) // Only depend on user_id change
   );
+  const handleLed = async (ledState) => {
+    try {
+      const response = await turnLed(ledState);
+      if (response == "Failed to turn on LED") {
+        alert("Failed to turn on LED");
+
+      } else {
+        alert('LED turned on successfully');
+      }
+      const updatedState = await getLed();
+      setState(updatedState.state);
+    } catch (error) {
+      console.log('Error turning on LED: ', error);
+    }
+  };
 
   const handleButtonPress = async () => {
     try {
@@ -101,6 +126,9 @@ const ProfileView = () => {
       <View className="w-full">
         <View className="items-center mt-5">
           <Text className="text-2xl font-bold" style={{ color: colors.text }}>Your Profile</Text>
+        </View>
+        <View className="items-center mt-5">
+          <Text className="text-2xl font-bold" style={{ color: colors.text }}>LedState: {state}</Text>
         </View>
         <View className="justify-center items-center py-5">
             {profilePic !== "" ?
@@ -154,6 +182,30 @@ const ProfileView = () => {
           onPress={handleButtonPress}
         >
           <Text style={{ color: colors.background_c1 }}>Submit</Text>
+        </TouchableOpacity>
+      </View>
+      <View className="items-center mt-5">
+        <TouchableOpacity
+          style={{
+        marginTop: 10,
+        backgroundColor: colors.primary,
+        padding: 10,
+        borderRadius: 5,
+          }}
+          onPress={() => handleLed("red")}
+        >
+          <Text style={{ color: colors.background_c1 }}>Turn On LED</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+        marginTop: 10,
+        backgroundColor: colors.primary,
+        padding: 10,
+        borderRadius: 5,
+          }}
+          onPress={() => handleLed("off")}
+        >
+          <Text style={{ color: colors.background_c1 }}>Turn Off LED</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
