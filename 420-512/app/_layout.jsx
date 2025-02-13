@@ -30,6 +30,7 @@ const Layout = () => {
         <Drawer.Screen name={`[user]/viewProfile`} options={{ title: 'Your Profile' }} />
         <Drawer.Screen name="contacts/contacts" options={{ title: 'Contact' }} />
         <Drawer.Screen name={`[user]/profile`} options={{ title: 'Settings' }} />
+        <Drawer.Screen name={`map`} options={{ title: 'Map' }} />
         <Drawer.Screen name="camera/index" options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
         <Drawer.Screen name="auth"options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
         <Drawer.Screen name="index" options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />

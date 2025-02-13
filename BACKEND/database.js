@@ -7,6 +7,8 @@ dotenv.config({ path: './setup.env' });
 const uri = process.env.URL
 const bd = process.env.DATABASE
 const coll = process.env.COLLECTION
+const coll1 = process.env.COLLECTION1
+const coll2 = process.env.COLLECTION2
 const client = new MongoClient(uri, {
     serverApi: {
       version: ServerApiVersion.v1,
@@ -15,11 +17,13 @@ const client = new MongoClient(uri, {
     }
   });
 let db;
+let db1;
 export async function run() {
     try {
       await client.connect();
       await client.db(bd).command({ ping: 1 });
       db = client.db(bd).collection(coll);
+      db1 = client.db(bd).collection(coll1);
       console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } catch(exception){
         console.log(exception)
@@ -52,6 +56,7 @@ export async function getUserByUsernameOrEmail(username, email) {
     console.log(rows[0]);
     return rows[0];
 }
+
 function generatePairid() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -60,12 +65,14 @@ function generatePairid() {
   }
   return result;
 }
+
 export async function findUserByPairId(pairId) {
   console.log(`Database : find user by pairId : ${pairId}`);
   const rows = await db.find({ pairId: pairId }).toArray();
   console.log(rows[0]);
   return rows[0];
 }
+
 export async function pairUser(id1,id2){
     //DEBUG
     console.log(`Database : pair users with id1 : ${id1} and id2 : ${id2}`)
@@ -152,6 +159,14 @@ export async function getUserContacts(id){
     }
     console.log(contacts);
     return contacts;
+}
+export async function getLocations(id){
+    //DEBUG
+    console.log(`Database : get user locations with id : ${id}`)
+    const user = await getUserById(id);
+    const userlocation = await db1.find({userId: id}).toArray();
+    return userlocation;
+    
 }
 export async function deleteUserById(id){
     //DEBUG
