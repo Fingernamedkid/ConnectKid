@@ -14,6 +14,8 @@ import { encryptPassword, decryptPassword } from './password.js';
 //   updatedAt: Date
 // }
 
+
+
 // const messageSchema = {
 //   _id: ObjectId,
 //   conversationId: ObjectId,
@@ -226,7 +228,6 @@ export async function deleteUserById(id){
 
 
 
-
 export async function createConversation(participant1Id, participant2Id) {
   console.log("Creation d'une conversation")
   // let largestId = await conversations.find({}).sort({ _id: -1 }).limit(1).toArray();
@@ -316,14 +317,14 @@ export async function markMessagesAsRead(conversationId, userId) {
   );
 }
 
-async function testCreateUser() {
-  try {
-      await run(); 
-      const user = await getUserConversations(1);
-      console.log('User created successfully:', user);
-  } catch (err) {
-      console.error('Error creating user:', err);
-  }
-}
+// async function testCreateUser() {
+//   try {
+//       await run(); 
+//       const user = await getUserContacts(37);
+//       console.log('User created successfully:', user);
+//   } catch (err) {
+//       console.error('Error creating user:', err);
+//   }
+// }
 
-testCreateUser();
+// testCreateUser();

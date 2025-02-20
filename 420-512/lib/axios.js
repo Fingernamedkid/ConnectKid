@@ -246,7 +246,7 @@ export async function fetchBlocks(){
     }
 }
 export async function fetchUserInfo(id){
-    try{
+    try{ 
         const token = await getToken();
         console.log(`JWT token: ${token}`);
         console.log(`axios.js : fetchUserInfo`)
@@ -293,7 +293,7 @@ export async function pairWith( pairId){
 export async function fetchContacts(){
     try{
         console.log(`axios.js : fetchContacts`)
-        const contacts = await api.get(`/users/contacts`)
+        const contacts = await api.get(`/contacts`)
         if(contacts.status != 200){
             throw new Error('axios.js : Failed to fetch contacts')
         }
@@ -322,5 +322,3 @@ export async function sendDatas(listcoordnate, id, steps){
         throw new Error(error)
     }
 } 
-
-console.log(getConversation(1));

@@ -2,28 +2,36 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList , Image, TouchableOpacity} from 'react-native';
-import { getConversation, fetchProfileData, addConversation } from '../../lib/axios';
+import { getConversation, fetchProfileData, addConversation, getToken, getIdFromJwt } from '../../lib/axios';
 import 'nativewind';
 
 const Messagerie = () => {
   const [conversations, setConversations] = useState([]);
   const [users, setUsers] = useState({});
   const [participants1,paticipants2] = useState([]);
+  const [userId, setUserId] = useState([])
   const currentUserId = 36; // Consider making this dynamic or from props/context
 
-  useEffect(() => {
+  const getId= async  () =>{
+    const jwt = await getIdFromJwt();
+    setUserId(jwt);
+     
+  }
+  useEffect(()  => {
     fetchConversations();
-    console.log(conversations)
+    getId();
     
+    
+
   }, []);
 
   const fetchConversations = async () => {
     try {
-      const response = await getConversation(37); // Why 37 when currentUserId is 36?
+      const response = await getConversation(userId); 
       if (response?.data) {
         setConversations(response.data);
         await fetchUsers(response.data);
-        console.log(response.data)
+       
       }
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -34,13 +42,11 @@ const Messagerie = () => {
   const fetchUsers = async (conversations) => {
     const userDetails = { ...users };
     
-    // Use Promise.all for parallel requests
     const userPromises = conversations.map(async (convo) => {
-      const participantId = convo.participants.find(id => id !== currentUserId);
+      const participantId = convo.participants.find(id => id !== userId);
       if (participantId && !userDetails[participantId]) {
         try {
           const response = await fetchProfileData(participantId);
-          console.log(response) // Should fetch participant ID, not currentUserId
           if (response) {
             userDetails[participantId] = response;
           }
@@ -57,39 +63,30 @@ const Messagerie = () => {
     
     
   };
-  const createConvos  = async () => {
-    try {
-      const response = await addConversation()
-    } catch (error) {
-      
-    }
-  } 
+  
 
   const renderConversation = ({ item }) => {
-    const participantId = item.participants.find(id => id !== currentUserId);
-    console.log(item.lastMessage)
+    const participantId = item.participants.find(id => id !== userId);
     const user = users[participantId];
-    console.log(user)
     
     
     return (
       
-      <View className="mb-4 p-4 bg-white rounded-lg shadow">
-        <Image>
-          {user?.image64}
-        </Image>
-        <Text className="text-lg font-semibold">
-          {user?.username || 'Unknown User'}
-        </Text>
-        <Text className="text-gray-700">
-          {item.lastMessage || 'No messages yet'}
-        </Text>
-        
-
-      </View>
+      <TouchableOpacity>
+        <View className="mb-4 p-4 bg-white rounded-lg shadow">
+          <Image>
+            {user?.image64}
+          </Image>
+          <Text className="text-lg font-semibold">
+            {user?.username || 'Unknown User'}
+          </Text>
+          <Text className="text-gray-700">
+            {item.lastMessage || 'No messages yet'}
+          </Text>
+        </View>
+      </TouchableOpacity>
     );
   };
-console.l
   return (
     <>
     <View>
