@@ -29,13 +29,12 @@ const Layout = () => {
           header: ({ navigation }) => <CustomDrawerHeader navigation={navigation} tabName={""} />,
         }}
       >
-        <Drawer.Screen name={`[user]/viewProfile`} options={{ title: 'Your Profile' }} />
         <Drawer.Screen name="leaderboard/leaderboard" options={{ title: 'Leaderboard' }} />
-        <Drawer.Screen name={`[user]/profile`} options={{ title: 'Settings' }} />
+        <Drawer.Screen name={`[user]/profile`} options={{ title: 'Profile' }} />
         <Drawer.Screen name="camera/index" options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
         <Drawer.Screen name="auth"options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
         <Drawer.Screen name="index" options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
-        <Drawer.Screen name="[user_id]/profileView" options={{drawerItemStyle: { display: 'none' }}} />
+        <Drawer.Screen name={`[user]/Messagerie`} options={{title : `Conversation`}} />
       </Drawer>
     </GestureHandlerRootView>
   );

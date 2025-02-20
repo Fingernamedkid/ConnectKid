@@ -67,10 +67,8 @@ const  WIDTH_BTN = Dimensions.get('window').width - 56
 
       try{
           setLoading(true);
-          const hashedPassword = await Crypto.digestStringAsync(
-              Crypto.CryptoDigestAlgorithm.SHA256, form.password
-          );
-          const result = await signUp(form.username, form.email,hashedPassword,form.type,form.phonenumber)
+          
+          const result = await signUp(form.username, form.email,form.password,form.type,form.phonenumber)
 
           setLoading(false)
           setForm({username:"", email:"", password:"",type : "Parent ", phonenumber: ""})

@@ -51,7 +51,7 @@ const signin = () => {
 
       setLoading(false)
       setForm({usernameOrEmail:"",password:""})
-      router.push(`../${result.id}/profileView`)
+      router.push(`../${result.id}/profile`)
 
     } catch(error){
       setLoading(false)

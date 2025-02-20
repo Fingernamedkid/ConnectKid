@@ -135,6 +135,86 @@ export async function deleteUserById(id){
         throw new Error(error)
     }
 }
+export async function addConversation(participantUn,participantDeux){
+    try {
+        const conversationData = {
+            participant1 : participantUn,
+            participant2 : participantDeux,
+        }
+        console.log("Trying to create a conversation");
+        const conversation =  await api.post("/conversation/add", conversationData,{
+            header:{
+                Authorization: 'none',
+            },
+            
+        })
+        if (!conversation){
+            throw new Error('no response : 404')
+        }
+        if( conversation.status != 200) throw new Error('responded with error')
+            return conversation
+    } catch (error) {
+        console.log(`axios.js : ${error}`)
+    }
+
+}
+export async function getConversation(id){
+    try {
+        console.log("Trying to get a conversation");
+
+        const conversation =  await api.get(`/conversation/${id}`)
+        console.log("fijbnewf")
+        if (!conversation){
+            throw new Error('no response : 404')
+        }
+        if( conversation.status != 200) throw new Error('responded with error')
+            return conversation;
+    } catch (error) {
+        console.log(`axios.js : ${error}`)
+    }
+
+}
+
+export async function sendMessages(senderId, conversationId, content){
+    try {
+        console.log("Trying to get a conversation");
+        const messageData ={
+            sender : senderId, 
+            conversation : conversationId,
+            content : content
+        }
+        const message =  await api.get("/message/send",messageData, {
+            header:{
+                Authorization: 'none',
+            },
+            
+        });
+        if (!message){
+            throw new Error('no response : 404')
+        }
+        if( message.status != 200) throw new Error('responded with error')
+            return message;
+    } catch (error) {
+        console.log(`axios.js : ${error}`)
+    }
+
+}
+export async function getMessages(conversationId){
+    try {
+        console.log("Trying to get a conversation");
+        
+        const message =  await api.get(`/message/${conversationId}`);
+        if (!message){
+            throw new Error('no response : 404')
+        }
+        if( message.status != 200) throw new Error('responded with error')
+            return message;
+    } catch (error) {
+        console.log(`axios.js : ${error}`)
+    }
+
+}
+
 export async function getIdFromJwt(){
     try{
         console.log("Trying to get the id from jwt")
@@ -241,4 +321,6 @@ export async function sendDatas(listcoordnate, id, steps){
         console.log("Error fetchingBlocks : ",error)
         throw new Error(error)
     }
-}
+} 
+
+console.log(getConversation(1));

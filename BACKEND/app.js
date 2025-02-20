@@ -1,8 +1,9 @@
 import express from 'express';
-import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId, getUserByUsernameOrEmail, pairUser, run, createConversation, getUserConversations, sendMessage} from './database.js';
+import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId, getUserByUsernameOrEmail, pairUser, run, createConversation, getUserConversations, sendMessage, getConversationMessages, markMessagesAsRead} from './database.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
 import e from 'express';
+import { ObjectId } from 'mongodb';
 
 const SECRET_KEY = 'your_secret_key'; // Use a strong secret key in production
 
@@ -21,7 +22,6 @@ app.post("/users/signin", async (req, res) => {
     if (!usernameOrEmail || !password) {
         return res.status(400).json({ error: "Username or email and password are required." });
     }
-
     try {
         console.log(`End point request with user/email : ${usernameOrEmail} and pass : ${password}`)
         const user = await getUserByUsernameOrEmailAndPassword(usernameOrEmail, password);
@@ -121,9 +121,9 @@ app.get("/users/:id", async (req, res) => {
             return res.status(401).json({ error: "Forbidden: badToken" });
         }
         
-        if (decoded.userId != userId) {
-            return res.status(409).json({ error: "Forbidden: you are not allowed to get this info" });
-        }
+        // if (decoded.userId != userId) {
+        //     return res.status(409).json({ error: "Forbidden: you are not allowed to get this info" });
+        // }
         // get user data
         const user = await getUserById(userId);
         console.log(userId);
@@ -199,7 +199,7 @@ app.put("/users/:id", async (req, res) => {
     }
     try {
         // Check for missing fields
-        if (!userData?.id || !userData?.username || !userData?.email || !userData?.profilePic || !userData?.description) {
+        if (!userData?.id || !userData?.username || !userData?.email || !userData?.profilePic) {
             return res.status(400).json({ error: "Request body missing parameters" });
         }
 
@@ -293,47 +293,101 @@ app.post('/conversation/add', async (req, res ) =>{
 
     }
 })
-app.get('/conversation/get', async (req, res) =>{
+app.get('/conversation/:id', async (req, res) =>{
     try{
-        const {userId} = req.body;    
+        const userId = req.params.id;    
 
-        const token = req.headers['authorization'].split('')[1];
-        if(!token) return res.status(403).send('Forbidden');
-        const decoded = jwt.verify(token, SECRET_KEY);
-        if (!decoded?.userId) {
-            return res.status(409).json({ error: "Forbidden: badToken" });
-        }
+        // const token = req.headers['authorization']?.split('')[1];
+        // if(!token) return res.status(403).send('Forbidden');
+        // const decoded = jwt.verify(token, SECRET_KEY);
+        // if (!decoded?.userId) {
+        //     return res.status(409).json({ error: "Forbidden: badToken" });
+        // }
 
         const conversation =await getUserConversations(userId);
-        res.status(200).json([{
-            id : conversation._id,
-            participants : conversation.participants,
-            lasMessage : null,
-            createdAt : conversation.createdAt,
-            updatedAt : conversation.updatedAt
-
-        }])
+        res.status(200).json(conversation.map(conv => ({
+            id: conv._id,
+            participants: conv.participants,
+            lastMessage: conv.lastMessage,  
+            createdAt: conv.createdAt,
+            updatedAt: conv.updatedAt
+        })));
+        
 
     } catch(error){
         console.error('Error fetching fetching a conversation: ', error);
         res.status(500).json({ error: 'Internal server error.' });
     }
 })
-app.post('/conversations/sendMessage',async (req, res) =>{
+app.post('/messages/send',async (req, res) =>{
     try {
-        const {senderId, conversationId, contenue} = req.body;    
+        const {senderId, conversationId, content} = req.body;    
 
-        const token = req.headers['authorization'].split('')[1];
+        const token = req.headers['authorization']?.split(' ')[1]; 
         if(!token) return res.status(403).send('Forbidden');
         const decoded = jwt.verify(token, SECRET_KEY);
         if (!decoded?.userId) {
             return res.status(409).json({ error: "Forbidden: badToken" });
         }
         
-        const message =  await sendMessage()
+        const message =  await sendMessage(senderId,  new ObjectId(conversationId), content);
+        res.status(200).json([{
+             message : 'Succès message envoyé'
+        }])
     } catch (error) {
+        console.error('Error fetching sending a message: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
         
     }
+})
+app.get('/messages/:id', (req, res) => {
+    try {
+    const { conversationId } = req.params.id;
+
+    const token = req.headers['authorization']?.split(' ')[1];
+    if(!token) return res.status(403).send('Forbidden');
+    const decoded = jwt.verify(token, SECRET_KEY);
+    if (!decoded?.userId) {
+        return res.status(409).json({ error: "Forbidden: badToken" });
+    }
+    
+    const messages = getConversationMessages(conversationId, 50);
+
+    res.status(200).json([{
+        conversationId : messages.conversationId,
+        sender : messages.sender,
+        content : messages.content,
+        timestamp : messages.timestamp,
+        read : messages.read
+    }])
+    } catch (error) {
+        console.error('Error fetching getting a message: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+
+})
+app.put('/messages/read', (req, res) => {
+    try {
+        const { conversationId , userId} = req.body;
+    
+        const token = req.headers['authorization']?.split(' ')[1];
+
+        if(!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY);
+
+        if (!decoded?.userId) {
+            return res.status(409).json({ error: "Forbidden: badToken" });
+        }
+        
+        const messages = markMessagesAsRead(conversationId, userId);
+    
+        res.status(200).json([{
+            message : 'Message lue'
+        }])
+        } catch (error) {
+            console.error('Error fetching reading a message: ', error);
+            res.status(500).json({ error: 'Internal server error.' });
+        }
 })
 
 app.use((err, req, res, next) => {

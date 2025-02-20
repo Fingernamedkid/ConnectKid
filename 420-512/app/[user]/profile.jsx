@@ -78,7 +78,6 @@ const Profile = () => {
         setpairId(profileData.pairId?profileData.pairId:0);
         setType(profileData.type )
         
-    
         if (profileData.image64) {
           console.log('Profile: Profile picture loaded');
           setProfilePic(profileData.image64);
@@ -140,7 +139,6 @@ const Profile = () => {
       const userData = {
         username,
         email,
-        number,
         profilePic: profilePic || '',
         id: userId || glob.user
       };

@@ -87,6 +87,7 @@ export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, passw
   console.log(rows[0]);
   if (rows.length > 0) {
     const user = rows[0];
+    console.log()
     const passworddecrypt = decryptPassword(user.password);
     console.log(passworddecrypt);
     console.log(password);
@@ -186,7 +187,6 @@ export async function updateUserProfile(userData){
       $set: {
         username: userData.username,
         email: userData.email,
-        phonenum: userData.phonenum,
         image64: userData.profilePic
       }
     };
@@ -214,21 +214,23 @@ export async function deleteUserById(id){
     return result.deletedCount;
 }
 
-async function testCreateUser() {
-  try {
-      await run(); // Ensure DB connection
-      const user = await createUser('test@example.com', 'testuser', 'password123');
-      console.log('User created successfully:', user);
-  } catch (err) {
-      console.error('Error creating user:', err);
-  }
-}
+// async function testCreateUser() {
+//   try {
+//       await run(); // Ensure DB connection
+//       const user = await createUser('test@example.com', 'testuser', 'password123');
+//       console.log('User created successfully:', user);
+//   } catch (err) {
+//       console.error('Error creating user:', err);
+//   }
+// }
 
 
 
 
 export async function createConversation(participant1Id, participant2Id) {
   console.log("Creation d'une conversation")
+  // let largestId = await conversations.find({}).sort({ _id: -1 }).limit(1).toArray();
+  // let conversationId = largestId.length > 0 ? largestId[0]._id + 1 : 1;
   
   const existingConv = await conversations.findOne({
     participants: { 
@@ -304,7 +306,6 @@ export async function getUserConversations(userId) {
 
 export async function markMessagesAsRead(conversationId, userId) {
 
-  
   await messages.updateMany(
     {
       conversationId: conversationId,
@@ -314,4 +315,15 @@ export async function markMessagesAsRead(conversationId, userId) {
     { $set: { read: true } }
   );
 }
-createConversation(1,2);
+
+async function testCreateUser() {
+  try {
+      await run(); 
+      const user = await getUserConversations(1);
+      console.log('User created successfully:', user);
+  } catch (err) {
+      console.error('Error creating user:', err);
+  }
+}
+
+testCreateUser();
