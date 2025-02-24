@@ -7,6 +7,7 @@ import { LeaderboardProvider } from '../contexts/LeaderboardContext';
 import CustomDrawerHeader from '../components/CustomDrawerHeader';
 
 import "../global.css";
+import ChatPage from './chatPage';
 
 const RootLayout = () => {
   return (
@@ -33,8 +34,10 @@ const Layout = () => {
         <Drawer.Screen name={`[user]/profile`} options={{ title: 'Profile' }} />
         <Drawer.Screen name="camera/index" options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
         <Drawer.Screen name="auth"options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
+        <Drawer.Screen name="chatPage" options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
         <Drawer.Screen name="index" options={{drawerItemStyle: { display: 'none' }, headerShown: false}} />
         <Drawer.Screen name={`[user]/Messagerie`} options={{title : `Conversation`}} />
+        
       </Drawer>
     </GestureHandlerRootView>
   );

@@ -343,6 +343,7 @@ app.get('/conversation/:id', async (req, res) =>{
 app.post('/messages/send',async (req, res) =>{
     try {
         const {senderId, conversationId, content} = req.body;    
+        
 
         const token = req.headers['authorization']?.split(' ')[1]; 
         if(!token) return res.status(403).send('Forbidden');
@@ -350,20 +351,26 @@ app.post('/messages/send',async (req, res) =>{
         if (!decoded?.userId) {
             return res.status(409).json({ error: "Forbidden: badToken" });
         }
-        
-        const message =  await sendMessage(senderId,  new ObjectId(conversationId), content);
-        res.status(200).json([{
-             message : 'Succès message envoyé'
-        }])
+        console.log("senderId:", senderId);
+
+        if (!senderId) {
+            console.error("senderId is undefined or null");
+            return; 
+        }
+
+        const objectId = ObjectId.isValid(conversationId) ? new ObjectId(conversationId) : conversationId;
+        console.log(conversationId)
+        const message =  await sendMessage(parseInt(senderId), objectId, content);
+        res.status(200).json(message)
     } catch (error) {
         console.error('Error fetching sending a message: ', error);
         res.status(500).json({ error: 'Internal server error.' });
         
     }
 })
-app.get('/messages/:id', (req, res) => {
+app.get('/messages/:id', async (req, res) => {
     try {
-    const { conversationId } = req.params.id;
+    const conversationId  = req.params.id;
 
     const token = req.headers['authorization']?.split(' ')[1];
     if(!token) return res.status(403).send('Forbidden');
@@ -371,16 +378,15 @@ app.get('/messages/:id', (req, res) => {
     if (!decoded?.userId) {
         return res.status(409).json({ error: "Forbidden: badToken" });
     }
-    
-    const messages = getConversationMessages(conversationId, 50);
 
-    res.status(200).json([{
-        conversationId : messages.conversationId,
-        sender : messages.sender,
-        content : messages.content,
-        timestamp : messages.timestamp,
-        read : messages.read
-    }])
+    const objectId = ObjectId.isValid(conversationId) ? new ObjectId(conversationId) : conversationId;
+        
+    console.log("Fetching messages for conversation:", objectId);
+    
+    const messages = await getConversationMessages(objectId, 50);
+
+    res.status(200).json(messages); 
+
     } catch (error) {
         console.error('Error fetching getting a message: ', error);
         res.status(500).json({ error: 'Internal server error.' });

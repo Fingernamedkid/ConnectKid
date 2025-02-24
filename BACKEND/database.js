@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { MongoClient,ServerApiVersion } from 'mongodb';
 import { encryptPassword, decryptPassword } from './password.js';
+import { ObjectId } from 'mongodb';
 // -----------------------------------------          Config          ----------------------------------------------
 // const conversationSchema = {
 //   _id: ObjectId,
@@ -320,11 +321,34 @@ export async function markMessagesAsRead(conversationId, userId) {
 // async function testCreateUser() {
 //   try {
 //       await run(); 
-//       const user = await getUserContacts(37);
-//       console.log('User created successfully:', user);
+//       const user = await getConversationMessages('67b57730fa7746c098680521', 10);
+//       console.log('MESSAGES created successfully:', user);
 //   } catch (err) {
 //       console.error('Error creating user:', err);
 //   }
 // }
-
 // testCreateUser();
+
+async function testGetMessages() {
+  try {
+    await run();
+    const conversationId = '67b57730fa7746c098680521';
+    const conversation1 = new ObjectId(conversationId);
+    const messages = await getConversationMessages(conversation1, 10);
+    
+    console.log(`Total messages found: ${messages.length}`);
+    
+    messages.forEach((msg, index) => {
+      console.log(`Message ${index + 1}:`, new Date(msg.timestamp).toISOString());
+      console.log(msg.content?.substring(0, 50));
+    });
+
+  } catch (err) {
+    console.error('Error in test:', err);
+    throw err;
+  }
+}
+
+testGetMessages()
+  .then(() => console.log('Test completed'))
+  .catch(err => console.error('Test failed:', err));

@@ -163,7 +163,6 @@ export async function getConversation(id){
         console.log("Trying to get a conversation");
 
         const conversation =  await api.get(`/conversation/${id}`)
-        console.log("fijbnewf")
         if (!conversation){
             throw new Error('no response : 404')
         }
@@ -175,35 +174,35 @@ export async function getConversation(id){
 
 }
 
-export async function sendMessages(senderId, conversationId, content){
+export async function sendMessages(senderId, conversationId, content) {
     try {
-        console.log("Trying to get a conversation");
-        const messageData ={
-            sender : senderId, 
-            conversation : conversationId,
-            content : content
-        }
-        const message =  await api.get("/message/send",messageData, {
-            header:{
-                Authorization: 'none',
-            },
-            
-        });
-        if (!message){
-            throw new Error('no response : 404')
-        }
-        if( message.status != 200) throw new Error('responded with error')
-            return message;
-    } catch (error) {
-        console.log(`axios.js : ${error}`)
-    }
+        
+        const messageData = {
+            senderId: senderId, 
+            conversationId: conversationId,
+            content: content
+        };
+        console.log(senderId)
 
+        const message = await api.post("/messages/send", messageData, {
+            headers: {
+                Authorization: 'none',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        return message.data;
+    } catch (error) {
+        console.error(`Axios error: ${error.response ? error.response.data : error.message}`);
+    }
 }
+
 export async function getMessages(conversationId){
     try {
         console.log("Trying to get a conversation");
+    
+        const message =  await api.get(`/messages/${conversationId}`);
         
-        const message =  await api.get(`/message/${conversationId}`);
         if (!message){
             throw new Error('no response : 404')
         }
