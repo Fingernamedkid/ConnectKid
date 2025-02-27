@@ -36,13 +36,15 @@ const client = new MongoClient(uri, {
 let db;
 let conversations;
 let messages; 
+let location;
 export async function run() {
     try {
       await client.connect();
       await client.db(bd).command({ ping: 1 });
       db = client.db(bd).collection(coll);
       conversations = client.db(bd).collection('conversations');
-      messages = client.db(bd).collection('messages')
+      messages = client.db(bd).collection('messages');
+      location = client.db(bd).collection('location');
       await conversations.createIndex({ participants: 1 });
       await messages.createIndex({ conversationId: 1 });
       await messages.createIndex({ sender: 1 });
@@ -84,12 +86,9 @@ export async function run() {
 export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, password) {
   console.log(`Database : get user with username/email : ${usernameOrEmail} and password : ${password}`);
   const rows = await db.find({$or:[{username:usernameOrEmail}, {email:usernameOrEmail}]}).toArray();
-  console.log(rows[0]);
   if (rows.length > 0) {
     const user = rows[0];
     const passworddecrypt = decryptPassword(user.password);
-    console.log(passworddecrypt);
-    console.log(password);
     if (passworddecrypt === password) {
       console.log(user);
       return user;
@@ -102,7 +101,6 @@ export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, passw
 export async function getUserByUsernameOrEmail(username, email) {
     console.log(`Database : get users with username: ${username} OR email : ${email}`);
     const rows = await db.find({$or:[{username: username}, {email: email}]}).toArray();
-    console.log(rows[0]);
     return rows[0];
 }
 function generatePairid() {
@@ -116,8 +114,24 @@ function generatePairid() {
 export async function findUserByPairId(pairId) {
   console.log(`Database : find user by pairId : ${pairId}`);
   const rows = await db.find({ pairId: pairId }).toArray();
-  console.log(rows[0]);
   return rows[0];
+}
+export async function addDevice(id, device_id){
+  console.log(`Database : add device with id : ${id} and device_id : ${device_id}`);
+  await location.insertOne({
+    userid: id,
+    device_id: device_id,
+    latitude: "45.5088",
+    longitude: "-73.5878",
+    velocity: 0
+  });
+  return true;
+
+} 
+export async function deleteDevice(id, device_id){
+  console.log(`Database : delete device with id : ${id} and device_id : ${device_id}`);
+  await location.deleteOne({$and:[{userid: id},{device_id: device_id}]});
+  return true;
 }
 export async function pairUser(id1,id2){
     //DEBUG
@@ -214,19 +228,6 @@ export async function deleteUserById(id){
     return result.deletedCount;
 }
 
-async function testCreateUser() {
-  try {
-      await run(); // Ensure DB connection
-      const user = await createUser('test@example.com', 'testuser', 'password123');
-      console.log('User created successfully:', user);
-  } catch (err) {
-      console.error('Error creating user:', err);
-  }
-}
-
-
-
-
 export async function createConversation(participant1Id, participant2Id) {
   console.log("Creation d'une conversation")
   
@@ -235,25 +236,21 @@ export async function createConversation(participant1Id, participant2Id) {
       $all: [parseInt(participant1Id), parseInt(participant2Id)] 
     }
   });
-
   if (existingConv) {
     return existingConv;
   }
-
   const newConversation = {
     participants: [parseInt(participant1Id), parseInt(participant2Id)],
     lastMessage: null,
     createdAt: new Date(),
     updatedAt: new Date()
   };
-
   const result = await conversations.insertOne(newConversation);
   return result;
 }
 
 
 export async function sendMessage(senderId, conversationId, content) {
-
   const message = {
     conversationId: conversationId,
     sender: parseInt(senderId),
@@ -278,24 +275,17 @@ export async function sendMessage(senderId, conversationId, content) {
       }
     }
   );
-
   return message;
 }
 
-
 export async function getConversationMessages(conversationId, limit = 50) {
-
-  
   return await messages.find({ conversationId: conversationId })
     .sort({ timestamp: -1 })
     .limit(limit)
     .toArray();
 }
 
-
 export async function getUserConversations(userId) {
-
-  
   return await conversations.find({
     participants: parseInt(userId)
   }).sort({ updatedAt: -1 }).toArray();
@@ -303,8 +293,6 @@ export async function getUserConversations(userId) {
 
 
 export async function markMessagesAsRead(conversationId, userId) {
-
-  
   await messages.updateMany(
     {
       conversationId: conversationId,
@@ -314,4 +302,17 @@ export async function markMessagesAsRead(conversationId, userId) {
     { $set: { read: true } }
   );
 }
-createConversation(1,2);
+export async function verifyDevice(id, device_id){
+  console.log(`Database : verify device with id : ${id} and device_id : ${device_id}`)
+  const rows = await location.find({$and:[{_id: id},{device_id: device_id}]}).toArray();
+  console.log(rows[0]);
+  return rows[0];
+}
+export async function saveLocation(id, latitude, longitude, velocity){
+  console.log(`Database : save location with id : ${id} and latitude : ${latitude}, longitude : ${longitude}, velocity : ${velocity}`)
+  await location.updateOne({ device_id: id }, { $set: { latitude: latitude, longitude: longitude, velocity: velocity } });
+  return true;
+}
+run().then(() => {
+  createConversation(1, 2);
+}).catch(console.error);

@@ -33,3 +33,4 @@ yarn.lock
 420-512/coverage/lcov-report/app/camera/index.jsx.html
 420-512/coverage/lcov-report/app/leaderboard/index.html
 420-512/coverage/lcov-report/app/leaderboard/leaderboard.jsx.html
+BACKEND\coverage\*
