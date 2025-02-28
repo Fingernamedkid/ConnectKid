@@ -1,5 +1,5 @@
 import express from 'express';
-import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId, getUserByUsernameOrEmail, pairUser, run, createConversation, getUserConversations, sendMessage, getConversationMessages, markMessagesAsRead} from './database.js';
+import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId,deleteDevice, addDevice, saveLocation,updateUserProfile, deleteUserById, getUserByUsernameOrEmail, pairUser, run, createConversation, getUserConversations, sendMessage, getConversationMessages, markMessagesAsRead} from './database.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
 import e from 'express';
@@ -201,10 +201,8 @@ app.put("/users/:id", async (req, res) => {
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) return res.status(403).send('Forbidden');
     const userId = req.params.id; 
-
     const userData  = req.body;
     console.log(req.body)
-
     if(!userData || userId != userData?.id){
         return res.status(409).json({ error: "Request missing userData" });
 
@@ -295,7 +293,7 @@ app.post('/conversation/add', async (req, res ) =>{
     try{
         const {participant1, participant2} = req.body;
 
-        const token = req.headers['authorization'].split('')[1];
+        const token = req.headers['authorization']?.split(' ')[1]; 
         if(!token) return res.status(403).send('Forbidden');
         const decoded = jwt.verify(token, SECRET_KEY);
         if (!decoded?.userId) {
@@ -304,8 +302,8 @@ app.post('/conversation/add', async (req, res ) =>{
 
         const conversation = await createConversation(participant1, participant2);
         res.status(200).json([{
-           message : "Succès"
-
+           message : "Succès",
+           conversation: conversation
         }])
         
     } catch(error){
@@ -317,14 +315,12 @@ app.post('/conversation/add', async (req, res ) =>{
 app.get('/conversation/:id', async (req, res) =>{
     try{
         const userId = req.params.id;    
-
-        // const token = req.headers['authorization']?.split('')[1];
-        // if(!token) return res.status(403).send('Forbidden');
-        // const decoded = jwt.verify(token, SECRET_KEY);
-        // if (!decoded?.userId) {
-        //     return res.status(409).json({ error: "Forbidden: badToken" });
-        // }
-
+        const token = req.headers['authorization']?.split(' ')[1];
+        if(!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (!decoded?.userId) {
+           return res.status(409).json({ error: "Forbidden: badToken" });
+        }
         const conversation =await getUserConversations(userId);
         res.status(200).json(conversation.map(conv => ({
             id: conv._id,
@@ -333,8 +329,6 @@ app.get('/conversation/:id', async (req, res) =>{
             createdAt: conv.createdAt,
             updatedAt: conv.updatedAt
         })));
-        
-
     } catch(error){
         console.error('Error fetching fetching a conversation: ', error);
         res.status(500).json({ error: 'Internal server error.' });
@@ -343,8 +337,6 @@ app.get('/conversation/:id', async (req, res) =>{
 app.post('/messages/send',async (req, res) =>{
     try {
         const {senderId, conversationId, content} = req.body;    
-        
-
         const token = req.headers['authorization']?.split(' ')[1]; 
         if(!token) return res.status(403).send('Forbidden');
         const decoded = jwt.verify(token, SECRET_KEY);
@@ -352,12 +344,10 @@ app.post('/messages/send',async (req, res) =>{
             return res.status(409).json({ error: "Forbidden: badToken" });
         }
         console.log("senderId:", senderId);
-
         if (!senderId) {
             console.error("senderId is undefined or null");
             return; 
         }
-
         const objectId = ObjectId.isValid(conversationId) ? new ObjectId(conversationId) : conversationId;
         console.log(conversationId)
         const message =  await sendMessage(parseInt(senderId), objectId, content);
@@ -371,43 +361,31 @@ app.post('/messages/send',async (req, res) =>{
 app.get('/messages/:id', async (req, res) => {
     try {
     const conversationId  = req.params.id;
-
     const token = req.headers['authorization']?.split(' ')[1];
     if(!token) return res.status(403).send('Forbidden');
     const decoded = jwt.verify(token, SECRET_KEY);
     if (!decoded?.userId) {
         return res.status(409).json({ error: "Forbidden: badToken" });
     }
-
-    const objectId = ObjectId.isValid(conversationId) ? new ObjectId(conversationId) : conversationId;
-        
+    const objectId = ObjectId.isValid(conversationId) ? new ObjectId(conversationId) : conversationId;  
     console.log("Fetching messages for conversation:", objectId);
-    
     const messages = await getConversationMessages(objectId, 50);
-
     res.status(200).json(messages); 
-
     } catch (error) {
         console.error('Error fetching getting a message: ', error);
         res.status(500).json({ error: 'Internal server error.' });
     }
-
 })
 app.put('/messages/read', (req, res) => {
     try {
         const { conversationId , userId} = req.body;
-    
         const token = req.headers['authorization']?.split(' ')[1];
-
         if(!token) return res.status(403).send('Forbidden');
         const decoded = jwt.verify(token, SECRET_KEY);
-
         if (!decoded?.userId) {
             return res.status(409).json({ error: "Forbidden: badToken" });
         }
-        
         const messages = markMessagesAsRead(conversationId, userId);
-    
         res.status(200).json([{
             message : 'Message lue'
         }])
@@ -416,6 +394,70 @@ app.put('/messages/read', (req, res) => {
             res.status(500).json({ error: 'Internal server error.' });
         }
 })
+app.post("/pairDevice", async (req, res) => {
+    try {
+        const { pair_id, device_id } = req.body;
+        if (!pair_id || !device_id) {
+            return res.status(400).json({ error: "Pair ID and Device ID are required." });
+        }
+        const result = await addDevice(pair_id, device_id);
+        if (!result) {
+            return res.status(500).json({ error: "Failed to pair device." });
+        }
+        res.status(200).json({ message: "Device paired successfully." });
+    } catch (error) {
+        console.error('Error pairing device: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+app.delete("/device", async (req, res) => {
+    try {
+        const token = req.header('Authorization')?.replace('Bearer ', '');
+        if (!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (!decoded?.userId) {
+            return res.status(409).json({ error: "Forbidden: badToken" });
+        }
+        const { device_id } = req.body;
+        if (!device_id) {
+            return res.status(400).json({ error: "Device ID is required." });
+        }
+
+        const userpaidid = await getUserById(decoded.userId);
+        if (!userpaidid) {
+            return res.status(404).json({ error: `No user found with id: ${decoded.userId}` });
+        }
+
+        const result = await deleteDevice(userpaidid.pairId, device_id);
+        if (!result) {
+            return res.status(500).json({ error: "Failed to delete device." });
+        }
+
+        res.status(200).json({ message: "Device deleted successfully." });
+    } catch (error) {
+        console.error('Error deleting device: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+        
+app.post("/location", async (req, res) => {
+    try {
+        const { user_id, lat, lon, velocity, device_id } = req.body;
+        if (!user_id || !lat || !lon || !velocity || !device_id) {
+            return res.status(400).json({ error: "User ID, latitude, longitude, velocity, and device ID are required." });
+        }
+        const userId = user_id;
+        const result = await saveLocation(userId, lat, lon, velocity);
+        if (!result) {
+            return res.status(500).json({ error: "Failed to save location." });
+        }
+        res.status(200).json({ message: "Location saved successfully." });
+    } catch (error) {
+        console.error('Error saving location: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
 
 app.use((err, req, res, next) => {
     console.error(err.stack)
@@ -425,4 +467,5 @@ app.use((err, req, res, next) => {
 
 app.listen(8080, () => {
     console.log('Server is running on port 8080')
-})
+})  
+export default app;

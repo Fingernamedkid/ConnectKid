@@ -39,6 +39,7 @@ const client = new MongoClient(uri, {
 let db;
 let conversations;
 let messages; 
+let location;
 export async function run() {
     try {
       await client.connect();
@@ -46,6 +47,7 @@ export async function run() {
       db = client.db(bd).collection(coll);
       conversations = client.db(bd).collection('conversations');
       messages = client.db(bd).collection('messages')
+      location = client.db(bd).collection('location')
       await conversations.createIndex({ participants: 1 });
       await messages.createIndex({ conversationId: 1 });
       await messages.createIndex({ sender: 1 });
@@ -233,24 +235,20 @@ export async function createConversation(participant1Id, participant2Id) {
   console.log("Creation d'une conversation")
   // let largestId = await conversations.find({}).sort({ _id: -1 }).limit(1).toArray();
   // let conversationId = largestId.length > 0 ? largestId[0]._id + 1 : 1;
-  
   const existingConv = await conversations.findOne({
     participants: { 
       $all: [parseInt(participant1Id), parseInt(participant2Id)] 
     }
   });
-
   if (existingConv) {
     return existingConv;
   }
-
   const newConversation = {
     participants: [parseInt(participant1Id), parseInt(participant2Id)],
     lastMessage: null,
     createdAt: new Date(),
     updatedAt: new Date()
   };
-
   const result = await conversations.insertOne(newConversation);
   return result;
 }
@@ -298,8 +296,6 @@ export async function getConversationMessages(conversationId, limit = 50) {
 
 
 export async function getUserConversations(userId) {
-
-  
   return await conversations.find({
     participants: parseInt(userId)
   }).sort({ updatedAt: -1 }).toArray();
@@ -348,7 +344,34 @@ async function testGetMessages() {
     throw err;
   }
 }
+export async function addDevice(id, device_id){
+  console.log(`Database : add device with id : ${id} and device_id : ${device_id}`);
+  await location.insertOne({
+    userid: id,
+    device_id: device_id,
+    latitude: "45.5088",
+    longitude: "-73.5878",
+    velocity: 0
+  });
+  return true;
 
+} 
+export async function deleteDevice(id, device_id){
+  console.log(`Database : delete device with id : ${id} and device_id : ${device_id}`);
+  await location.deleteOne({$and:[{userid: id},{device_id: device_id}]});
+  return true;
+}
+export async function verifyDevice(id, device_id){
+  console.log(`Database : verify device with id : ${id} and device_id : ${device_id}`)
+  const rows = await location.find({$and:[{_id: id},{device_id: device_id}]}).toArray();
+  console.log(rows[0]);
+  return rows[0];
+}
+export async function saveLocation(id, latitude, longitude, velocity){
+  console.log(`Database : save location with id : ${id} and latitude : ${latitude}, longitude : ${longitude}, velocity : ${velocity}`)
+  await location.updateOne({ device_id: id }, { $set: { latitude: latitude, longitude: longitude, velocity: velocity } });
+  return true;
+}
 testGetMessages()
   .then(() => console.log('Test completed'))
   .catch(err => console.error('Test failed:', err));
