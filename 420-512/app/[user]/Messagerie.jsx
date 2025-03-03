@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, Modal, TextInput } from 'react-native';
-import { getConversation, fetchProfileData, getIdFromJwt, fetchContacts } from '../../lib/axios';
+import { getConversation, fetchProfileData, getIdFromJwt, fetchContacts,addConversation } from '../../lib/axios';
 import { useRouter } from 'expo-router';
 
 const CreateConversationModal = ({ visible, onClose, onCreateConversation, userId }) => {
@@ -63,26 +63,26 @@ const CreateConversationModal = ({ visible, onClose, onCreateConversation, userI
     
     return (
       <TouchableOpacity 
-        onPress={() => onCreateConversation(item)}
-        className="p-4 flex-row items-center border-b border-gray-200"
-      >
-        {item.image64 ? (
-          <Image 
-            source={{ uri: item.image64 }}
-            className="w-12 h-12 rounded-full mr-3"
-          />
-        ) : (
-          <View className="w-12 h-12 rounded-full bg-gray-300 mr-3 justify-center items-center">
-            <Text className="text-gray-600 font-bold">
-              {(item.username || '?')[0]?.toUpperCase()}
-            </Text>
-          </View>
-        )}
-        <View>
-          <Text className="text-lg font-semibold">{item.username || 'Unknown User'}</Text>
-          <Text className="text-gray-500">{item.email || 'No email'}</Text>
+      onPress={() => onCreateConversation(item)}
+      className="p-4 flex-row items-center border-b border-gray-200"
+    >
+      {item.image64 ? (
+        <Image 
+          source={{ uri: item.image64 }}
+          className="w-12 h-12 rounded-full mr-3"
+        />
+      ) : (
+        <View className="w-12 h-12 rounded-full bg-gray-300 mr-3 justify-center items-center">
+          <Text className="text-gray-600 font-bold">
+            {(item.username || '?')[0]?.toUpperCase()}
+          </Text>
         </View>
-      </TouchableOpacity>
+      )}
+      <View>
+        <Text className="text-lg font-semibold">{item.username || 'Unknown User'}</Text>
+        <Text className="text-gray-500">{item.email || 'No email'}</Text>
+      </View>
+    </TouchableOpacity>
     );
   };
 
@@ -206,6 +206,10 @@ const Messagerie = () => {
     try {
       // Here you would typically call an API to create a new conversation
       // For now, we'll just close the modal and refresh conversations
+      console.log('Creating conversation with:', contact._id);
+      const response = await addConversation(userId, contact._id);
+
+      console.log(response)
       setIsModalVisible(false);
       await fetchConversations();
     } catch (error) {
@@ -237,14 +241,14 @@ const Messagerie = () => {
     const participantId = item.participants.find(id => id !== userId);
     const user = users[participantId];
     const messageText = getLastMessageText(item.lastMessage);
-
+    console.log(user)
     return (
       <TouchableOpacity onPress={() => chatPage(item.id, user?.username)}>
         <View className="mb-4 p-4 bg-white rounded-lg shadow">
           <View className="flex-row items-center">
             {user?.image64 ? (
               <Image 
-                source={{ uri: user.image64 }}
+                source={{ uri: "data:image/jpeg;base64,"+user.image64 }}
                 className="w-12 h-12 rounded-full mr-3"
               />
             ) : (

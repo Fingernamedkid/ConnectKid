@@ -181,6 +181,20 @@ export async function getUserById(id) {
   console.log("Got user with id " + id + ": ", rows[0]);
   return rows[0];
 }
+export async function getUserByIdNoPasswordAndNoimage(id) {
+  console.log(`Database : get users by Id : ${id}`);
+  id = parseInt(id);
+
+  const rows = await db.find({_id: id}).project({ password: 0 }).toArray();
+  if (rows.length === 0) {
+      console.log(`No user found with id ${id}`);
+      return null;
+  }
+  
+
+  console.log("Got user with id " + id + ": ", rows[0]);
+  return rows[0];
+}
 
 export async function updateUserProfile(userData){
     //Modifie les données de l'utilisateur avec userData = {id,username,email,profilePic}
@@ -205,7 +219,8 @@ export async function getUserContacts(id){
     const user = await getUserById(id);
     let contacts = [];
     for (let i = 0; i < user.contact.length; i++) {
-      let contact = await getUserById(user.contact[i]);
+      let contact = await getUserByIdNoPasswordAndNoimage(user.contact[i]);
+
       contacts.push(contact);
     }
     console.log(contacts);
@@ -371,6 +386,33 @@ export async function saveLocation(id, latitude, longitude, velocity){
   console.log(`Database : save location with id : ${id} and latitude : ${latitude}, longitude : ${longitude}, velocity : ${velocity}`)
   await location.updateOne({ device_id: id }, { $set: { latitude: latitude, longitude: longitude, velocity: velocity } });
   return true;
+}
+export async function getContactslocation(id) {
+  console.log(`Database : get contacts location with id : ${id}`);
+  const user = await getUserById(id);
+  let contacts = [];
+  for (let i = 0; i < user.contact.length; i++) {
+    let contact = await getUserById(user.contact[i]);
+    let location = await getLocationByPairId(contact.pairId );
+    if (location) {
+      contacts.push({
+        userid: location.userid,
+        device_id: location.device_id,
+        latitude: parseFloat(location.latitude.toFixed(6)),
+        longitude: parseFloat(location.longitude.toFixed(6)),
+        velocity: parseFloat(location.velocity.toFixed(6)),
+        image64: contact.image64
+      });
+    }
+  }
+  console.log(contacts);
+  return contacts;
+}
+export async function getLocationByPairId(id){
+  console.log(`Database : get location with id : ${id}`);
+  const rows = await location.find({userid: id}).toArray();
+  console.log(rows[0]);
+  return rows[0];
 }
 testGetMessages()
   .then(() => console.log('Test completed'))

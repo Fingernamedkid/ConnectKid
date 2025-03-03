@@ -1,5 +1,5 @@
 import express from 'express';
-import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId,deleteDevice, addDevice, saveLocation,updateUserProfile, deleteUserById, getUserByUsernameOrEmail, pairUser, run, createConversation, getUserConversations, sendMessage, getConversationMessages, markMessagesAsRead} from './database.js';
+import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId,deleteDevice, getContactslocation, addDevice, saveLocation,updateUserProfile, deleteUserById, getUserByUsernameOrEmail, pairUser, run, createConversation, getUserConversations, sendMessage, getConversationMessages, markMessagesAsRead} from './database.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
 import e from 'express';
@@ -113,6 +113,9 @@ app.post("/users/pair", async (req, res) => {
         if (!pair) {
             return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${pairId}`});
         }
+        if (pair.pairId == user.pairId) {
+            return res.status(409).json({ error: "User is already paired." });
+        }
         const pairUserres = await pairUser(decoded.userId, pair._id);
         if (!pairUserres) {
             return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${pairId}`});
@@ -195,7 +198,25 @@ app.get("/contacts", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
-
+app.get("/users/image/:id", async (req, res) => {
+    try {
+        const userId = req.params.id; 
+        if (!userId) {
+            return res.status(400).json({ error: "Request missing parameters" });
+        }
+        const user = await getUserById(userId);
+        if (!user) {
+            return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${userId}`});
+        }
+        res.status(200).json({
+            image64: user.image64
+        });
+    } catch (error) {
+        console.error('Error fetching image: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+);
 
 app.put("/users/:id", async (req, res) => {
     const token = req.headers['authorization']?.split(' ')[1];
@@ -292,14 +313,13 @@ app.post("/users/authenticate", async (req, res) => {
 app.post('/conversation/add', async (req, res ) =>{
     try{
         const {participant1, participant2} = req.body;
-
+        console.log(participant1, participant2)
         const token = req.headers['authorization']?.split(' ')[1]; 
         if(!token) return res.status(403).send('Forbidden');
         const decoded = jwt.verify(token, SECRET_KEY);
         if (!decoded?.userId) {
             return res.status(409).json({ error: "Forbidden: badToken" });
         }
-
         const conversation = await createConversation(participant1, participant2);
         res.status(200).json([{
            message : "Succès",
@@ -404,7 +424,7 @@ app.post("/pairDevice", async (req, res) => {
         if (!result) {
             return res.status(500).json({ error: "Failed to pair device." });
         }
-        res.status(200).json({ message: "Device paired successfully." });
+        res.status(200).json({ message: "Device paired successfully.", user_id: pair_id });
     } catch (error) {
         console.error('Error pairing device: ', error);
         res.status(500).json({ error: 'Internal server error.' });
@@ -439,8 +459,25 @@ app.delete("/device", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
-
-        
+app.get("/location", async (req, res) => {
+    try {
+        const token = req.headers['authorization']?.split(' ')[1];
+        if (!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY); // Synchronous verification
+        if (!decoded?.userId) {
+            return res.status(401).json({ error: "Unauthorized: Invalid token" });
+        }
+        const location = await getContactslocation(decoded.userId);
+        if (!location) {
+            return res.status(404).json({ error: `No location found for user id: ${decoded.userId}` });
+        }
+        console.log("Location: ", location);
+        res.status(200).json({ location });
+    } catch (error) {
+        console.error('Error fetching location: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
 app.post("/location", async (req, res) => {
     try {
         const { user_id, lat, lon, velocity, device_id } = req.body;

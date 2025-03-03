@@ -11,7 +11,6 @@ const index = () => {
     const { theme } = useTheme()
     const router = useRouter()
     const colors = colorsPalette[theme]
-   return <Redirect href="./17/Messagerie" />;
     useFocusEffect(() => {
         try{
             const getId = async () => {
@@ -21,7 +20,7 @@ const index = () => {
                     console.log("no jwt")
                     return null
                 }
-                router.push(`/${id}/profileView`)
+                router.push(`/${id}/profile`)
                 
             }
             getId()

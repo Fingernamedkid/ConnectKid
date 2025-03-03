@@ -5,7 +5,7 @@ import OverlayMessage from '../../components/OverlayMessage';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colorsPalette } from '../../assets/colorsPalette';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { fetchProfileData, setToken, updateProfileData, deleteUserById } from '../../lib/axios';
+import { fetchProfileData, setToken, updateProfileData, deleteUserById, pairWith } from '../../lib/axios';
 import { useGlobalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserId } from '../../contexts/UserIdContext';
@@ -62,7 +62,7 @@ const Profile = () => {
   const router = useRouter();
   const refresh = useRef(false);
   const { userId, setUserId } = useUserId();
-
+  const [pairid, setPairing] = useState(""); // Step 1: Define state for input
   const [profileData, setProfileData] = useState({
     username: "Default",
     email: "Default@abc.ca",
@@ -206,7 +206,18 @@ const Profile = () => {
       console.error('Delete user error:', error);
     }
   };
-
+  const addToContact = async () => {
+    try {
+      const res = await pairWith(pairid); 
+      if (res) {
+        alert('Contact added successfully');
+      } else {
+        alert('Failed to add contact')
+      }
+    } catch (error) {
+      console.error('Add to contact error:', error);
+    }
+  }
   return (
     <>
       <ScrollView style={{ backgroundColor: colors.background_c1 }} className='justify-center items-center'>
@@ -270,6 +281,26 @@ const Profile = () => {
               </View>
             </View>
           </View>
+          <View className="items-center mt-5">
+      <View className="items-center mt-5">
+        <TextInput
+          className="justify-center z-0 py-5 rounded-lg text-center w-full"
+          style={{ color: colors.text, backgroundColor: colors.background_c1 }}
+          placeholder="Enter Another PairId"
+          placeholderTextColor={colors.secondary}
+          value={pairid} // Step 2: Bind value to state
+          onChangeText={setPairing} // Step 3: Update state on input change
+        />
+        <TouchableOpacity
+          onPress={addToContact} // Step 4: Call addToContact on press
+          className="flex-row items-center justify-center p-2 mt-2 rounded-md"
+          style={{ backgroundColor: colors.lightAlert }}
+        >
+          <Text className="pr-1" style={{ color: colors.lightText }}>Add to Contact</Text>
+          <Icon name="address-book" size={20} color={colors.lightText} />
+        </TouchableOpacity>
+      </View>
+    </View>
 
           <View className="w-full items-center">
             <View className="flex-row justify-center items-center py-10 gap-5">

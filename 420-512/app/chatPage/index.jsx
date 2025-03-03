@@ -47,7 +47,7 @@ const ChatPage = () => {
           <View className="flex-1 items-center">
             <Text className="text-xl font-semibold text-gray-700">{username}</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => window.history.back()} className="p-2">
             <Text className="text-gray-500">Back</Text>
           </TouchableOpacity>
         </View>

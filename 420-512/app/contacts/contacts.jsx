@@ -16,7 +16,7 @@ const Leaderboard = () => {
   
   const handleNamePress = (userId) => {
     console.log('Pressed on user:', userId, 'Redirecting to profile view of user ', userId);
-    router.push(`/${userId}/profileView`);
+    router.push(`/${userId}/profile`);
   };
 
   const renderBlock = ({ item, index }) => {
@@ -53,10 +53,7 @@ const Leaderboard = () => {
         </View>
 
         <View className="flex-row justify-center py-3">
-          <Button
-            title={isLeastSteps ? "Show Top 10 Most Steps" : "Show Top 10 Least Steps"}
-            onPress={toggleFilter}
-          />
+
         </View>
       </View>
       

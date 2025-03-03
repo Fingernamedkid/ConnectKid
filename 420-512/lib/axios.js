@@ -99,6 +99,7 @@ export async function fetchProfileData(id){
         console.log(`Trying to fetch profileData with id: ${id}`);
         
         const profileData = await api.get(`/users/${id}`);
+        await AsyncStorage.setItem('userId', id);
         if(!(profileData.status == 200)) throw Error('Failed to fetch profile');
         return profileData.data
     } catch (error){
@@ -142,12 +143,8 @@ export async function addConversation(participantUn,participantDeux){
             participant2 : participantDeux,
         }
         console.log("Trying to create a conversation");
-        const conversation =  await api.post("/conversation/add", conversationData,{
-            header:{
-                Authorization: 'none',
-            },
-            
-        })
+        console.log(conversationData)
+        const conversation =  await api.post("/conversation/add", conversationData)
         if (!conversation){
             throw new Error('no response : 404')
         }
@@ -173,7 +170,20 @@ export async function getConversation(id){
     }
 
 }
-
+export async function fetchContactsLocation(){
+    try {
+        console.log("Trying to get contacts location");
+        const contacts =  await api.get(`/location`)
+        if (!contacts){
+            throw new Error('no response : 404')
+        }
+        console.log("Contacts got", contacts.data)
+        if( contacts.status != 200) throw new Error('responded with error')
+            return contacts.data.location;
+    }catch(error){
+        console.log(`axios.js : ${error}`)
+    }
+}
 export async function sendMessages(senderId, conversationId, content) {
     try {
         
@@ -296,9 +306,29 @@ export async function fetchContacts(){
         if(contacts.status != 200){
             throw new Error('axios.js : Failed to fetch contacts')
         }
+        console.log("Contact got. Fetching image")
+        for (let i = 0; i < contacts.data.contacts.length; i++) {
+            console.log(`Fetching image for ${contacts.data.contacts[i]._id}`)
+            const image = await fetchImage(contacts.data.contacts[i]._id)
+            contacts.data.contacts[i].image64 = image.image64
+        }
+        console.log(contacts.data)
         return contacts.data
     }catch(error){
         console.log("Error fetchingContacts : ",error)
+    }
+}
+export async function fetchImage(id){
+    try{
+        console.log(`axios.js : fetchImage`)
+        const image = await api.get(`/users/image/${id}`)
+        if(image.status != 200){
+            throw new Error('axios.js : Failed to fetch image')
+        }
+        
+        return image.data
+    }catch(error){
+        console.log("Error fetchingImage : ",error)
         throw new Error(error)
     }
 }
