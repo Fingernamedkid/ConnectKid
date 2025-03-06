@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.11.0",
     "mysql2": "^3.11.3",
-    "supertest": "^7.0.0"
+    "supertest": "^7.0.0",
+    "ws": "^8.18.1"
   }
 }

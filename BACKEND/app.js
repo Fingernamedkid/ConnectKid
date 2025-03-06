@@ -1,14 +1,49 @@
 import express from 'express';
-import {getUserByUsernameOrEmailAndPassword,getUserContacts, createUser,getUserById, findUserByPairId,deleteDevice, getContactslocation, addDevice, saveLocation,updateUserProfile, deleteUserById, getUserByUsernameOrEmail, pairUser, run, createConversation, getUserConversations, sendMessage, getConversationMessages, markMessagesAsRead} from './database.js';
+import {getUserByUsernameOrEmailAndPassword,getUserContacts, updateUserStatus,createUser,getUserById, getDevices, findUserByPairId,deleteDevice, getContactslocation, addDevice, saveLocation,updateUserProfile, deleteUserById, getUserByUsernameOrEmail, pairUser, run, createConversation, getUserConversations, sendMessage, getConversationMessages, markMessagesAsRead} from './database.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
 import e from 'express';
 import { ObjectId } from 'mongodb';
+import { WebSocketServer } from 'ws';
 
 const SECRET_KEY = 'your_secret_key'; // Use a strong secret key in production
 
 const app = express();
 run();
+
+const wss = new WebSocketServer({ port: 8082 });
+console.log("Websocket server started on port 8082");
+wss.on('connection', (ws, req) => {
+    console.log("Connection established");
+    const token = req.url.split('?token=')[1];
+    if (!token) {
+      ws.close();
+      return;
+    }
+    let decoded;
+    try {
+      decoded = jwt.verify(token, SECRET_KEY);
+    } catch (error) {
+      ws.close();
+      return;
+    }
+    const userId = decoded.userId;
+    ws.userId = userId;
+    updateUserStatus(userId, true);
+    ws.on('close', () => {
+      updateUserStatus(userId, false);
+      console.log("Connection closed");
+    });
+  });
+
+const notifyUser = (userId, message, type) => {
+    wss.clients.forEach((client) => {
+        if (client.userId === userId && client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ type: type, ...message }));
+        }
+    });
+};
+
 // Use CORS middleware
 app.use(cors());
 
@@ -167,7 +202,8 @@ app.get("/users/:id", async (req, res) => {
             email: user.email || "",
             image64: user.image64 || "",
             phonenum: user.phonenum || "",
-            pairId: user.pairId || ""
+            pairId: user.pairId || "",
+            type: user.type || ""
         });
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {
@@ -372,6 +408,8 @@ app.post('/messages/send',async (req, res) =>{
         console.log(conversationId)
         const message =  await sendMessage(parseInt(senderId), objectId, content);
         res.status(200).json(message)
+        // Notify participants
+        notifyUser(senderId, { content: content }, 'message');
     } catch (error) {
         console.error('Error fetching sending a message: ', error);
         res.status(500).json({ error: 'Internal server error.' });
@@ -414,6 +452,7 @@ app.put('/messages/read', (req, res) => {
             res.status(500).json({ error: 'Internal server error.' });
         }
 })
+
 app.post("/pairDevice", async (req, res) => {
     try {
         const { pair_id, device_id } = req.body;
@@ -430,6 +469,29 @@ app.post("/pairDevice", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 });
+app.get("/device", async (req, res) => {
+    try {
+        const token = req.headers['authorization']?.split(' ')[1];
+        if (!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY); // Synchronous verification
+        if (!decoded?.userId) {
+            return res.status(401).json({ error: "Unauthorized: Invalid token" });
+        }
+        const userpaidid = await getUserById(decoded.userId);
+        if (!userpaidid) {
+            return res.status(404).json({ error: `No user found with id: ${decoded.userId}` });
+        }
+        const devices = await getDevices(userpaidid.pairId);
+        if (!devices) {
+            return res.status(404).json({ error: `No devices found for user id: ${decoded.userId}` });
+        }
+        res.status(200).json({ devices });
+    } catch (error) {
+        console.error('Error fetching devices: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
 app.delete("/device", async (req, res) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');

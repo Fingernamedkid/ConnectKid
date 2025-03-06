@@ -35,6 +35,7 @@ export default function Map() {
                 setContacts(contacts);
                 mapRef.current?.fitToCoordinates(contacts, {
                     edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+                    animated: true,
                 });
             });
         }, [])
@@ -48,6 +49,12 @@ export default function Map() {
                 style={{ flex: 1 }}
                 onRegionChange={setRegion}
                 googleMapsApiKey={googleMapsApiKey}
+                initialRegion={{
+                    latitude: 39.8283, 
+                    longitude: -98.5795, 
+                    latitudeDelta: 40,
+                    longitudeDelta: 40,
+                }}
             >
                 <MarkerClusterer
                     onClusterPress={(cluster) => {
@@ -83,7 +90,7 @@ export default function Map() {
                                     height: 40,
                                     width: 40,
                                     borderRadius: 50,
-                                    borderColor: 'red',
+                                    borderColor: contact.velocity < 10 ? 'green' : 'red', 
                                     borderWidth: 2,
                                 }}
                             />

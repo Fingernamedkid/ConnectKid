@@ -10,7 +10,7 @@ import { useGlobalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserId } from '../../contexts/UserIdContext';
 import Animated, { Easing, withTiming, useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
-
+import { Alert } from 'react-native';
 const WIDTH = Dimensions.get('window').width;
 
 const ProfileField = ({ label, value, isEditing, onChangeText, colors }) => (
@@ -116,7 +116,7 @@ const Profile = () => {
 
     try {
       const data = await fetchProfileData(currentUserId);
-      console.log(data.username)
+      console.log(data)
       if (!data) throw new Error('Failed fetching data -> no Data');
 
       setProfileData({
@@ -210,9 +210,10 @@ const Profile = () => {
     try {
       const res = await pairWith(pairid); 
       if (res) {
-        alert('Contact added successfully');
+        
+        Alert.alert('Contact added successfully');
       } else {
-        alert('Failed to add contact')
+        Alert.alert('Failed to add contact')
       }
     } catch (error) {
       console.error('Add to contact error:', error);

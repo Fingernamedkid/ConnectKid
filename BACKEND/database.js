@@ -371,6 +371,12 @@ export async function addDevice(id, device_id){
   return true;
 
 } 
+export async function getDevices(id){
+  console.log(`Database : get devices with id : ${id}`);
+  const rows = await location.find({userid: id}).toArray();
+  console.log(rows);
+  return rows;
+}
 export async function deleteDevice(id, device_id){
   console.log(`Database : delete device with id : ${id} and device_id : ${device_id}`);
   await location.deleteOne({$and:[{userid: id},{device_id: device_id}]});
@@ -398,9 +404,9 @@ export async function getContactslocation(id) {
       contacts.push({
         userid: location.userid,
         device_id: location.device_id,
-        latitude: parseFloat(location.latitude.toFixed(6)),
-        longitude: parseFloat(location.longitude.toFixed(6)),
-        velocity: parseFloat(location.velocity.toFixed(6)),
+        latitude: parseFloat(location.latitude),
+        longitude: parseFloat(location.longitude),
+        velocity: parseFloat(location.velocity),
         image64: contact.image64
       });
     }
@@ -413,6 +419,13 @@ export async function getLocationByPairId(id){
   const rows = await location.find({userid: id}).toArray();
   console.log(rows[0]);
   return rows[0];
+}
+export async function updateUserStatus(userId, isOnline) {
+  const status = isOnline ? 'online' : 'offline';
+  return await db.updateOne(
+    { _id: userId },
+    { $set: { status: status } }
+  );
 }
 testGetMessages()
   .then(() => console.log('Test completed'))

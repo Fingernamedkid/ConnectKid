@@ -184,6 +184,38 @@ export async function fetchContactsLocation(){
         console.log(`axios.js : ${error}`)
     }
 }
+export async function fetchDevice(){
+    try {
+        console.log("Trying to get device");
+        const device =  await api.get(`/device`)
+        if (!device){
+            throw new Error('no response : 404')
+        }
+        if (device.status === 404) {
+            return "No device found";
+        }
+        if( device.status != 200) throw new Error('responded with error')
+            return device.data;
+    }catch(error){
+        console.log(`axios.js : ${error}`)
+    }
+}
+export async function deleteDevice(id){
+    try {
+        console.log("Trying to delete device");
+        const device =  await api.delete(`/device`, {
+            device_id: id
+        });
+        if (!device){
+            throw new Error('no response : 404')
+        }
+        if( device.status != 200) throw new Error('responded with error')
+        return true;
+    }
+    catch(error){
+        console.log(`axios.js : ${error}`)
+    }
+}
 export async function sendMessages(senderId, conversationId, content) {
     try {
         
