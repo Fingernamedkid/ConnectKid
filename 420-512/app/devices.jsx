@@ -34,7 +34,7 @@ const Devices = () => {
 
     const handleDelete = async (id) => {
         try {
-            if(await deleteDevice(id);){
+            if(await deleteDevice(id)){
 
                 Alert.alert('Device deleted successfully');
                 setDevices(devices.filter(device => device.device_id !== id));

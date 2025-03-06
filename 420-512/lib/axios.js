@@ -207,12 +207,14 @@ export async function deleteDevice(id){
             device_id: id
         });
         if (!device){
-            throw new Error('no response : 404')
+            return false;
+
         }
         if( device.status != 200) throw new Error('responded with error')
         return true;
     }
     catch(error){
+        return false;
         console.log(`axios.js : ${error}`)
     }
 }
