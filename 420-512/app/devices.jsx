@@ -3,28 +3,33 @@ import { StyleSheet, Text, View, Button, FlatList } from 'react-native';
 
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { fetchDevice, d} from '../lib/axios';
+import { fetchDevice, getIdFromJwt} from '../lib/axios';
 import { Alert } from 'react-native';
+
 const Devices = () => {
     const [devices, setDevices] = useState([]);
     const router = useRouter();
 
     useFocusEffect(
-        
+
         useCallback(() => {
             
             const loadDevices = async () => {
-                const jwt = localStorage.getItem('jwt');
-                if (!jwt) {
+                const id = await getIdFromJwt();
+                if(!id){
+                    console.log("no jwt")
                     router.replace('/');
-                    return;
-                }
+                    return null;}
                 try {
                     const response = await fetchDevice();
-                    setDevices(response.data);
+                    if (response){
+                        setDevices(response.data);
+                    }
                     console.log('Devices:', response.data);
                 } catch (error) {
+                    setDevices([]);
                     console.error('Failed to fetch devices:', error);
+                    router.replace('/');
                 }
             };
 

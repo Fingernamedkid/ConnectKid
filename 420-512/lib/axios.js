@@ -192,7 +192,7 @@ export async function fetchDevice(){
             throw new Error('no response : 404')
         }
         if (device.status === 404) {
-            return "No device found";
+            return null;
         }
         if( device.status != 200) throw new Error('responded with error')
             return device.data;
@@ -264,13 +264,17 @@ export async function getIdFromJwt(){
         const id = await api.post('/users/authenticate')
 
         if(!id ){
-            throw new Error('no response : 404')
+            return null
         }
-        if( id.status != 200) throw new Error('responded with error')
+        if( id.status != 200) return null
         return id.data.id
     }
     catch(error){
-        console.log(`axios.js : ${error}`)
+        if (error.response && error.response.status === 401) {
+            console.log("No JWT provided");
+        } else {
+            console.log(`axios.js : ${error}`);
+        }
     }
 }
 export async function fetchBlocks(){

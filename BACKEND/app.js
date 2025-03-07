@@ -14,7 +14,6 @@ run();
 const wss = new WebSocketServer({ port: 8082 });
 console.log("Websocket server started on port 8082");
 wss.on('connection', (ws, req) => {
-    console.log("Connection established");
     const token = req.url.split('?token=')[1];
     if (!token) {
       ws.close();
@@ -99,7 +98,6 @@ app.get("/contacts", async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
   });
-  
   
 app.post("/users", async (req, res) => {
     const { username, password, email, type, phonenum  } = req.body;
@@ -240,6 +238,12 @@ app.get("/users/image/:id", async (req, res) => {
         if (!userId) {
             return res.status(400).json({ error: "Request missing parameters" });
         }
+        const token = req.headers['authorization']?.split(' ')[1];
+        if (!token) return res.status(403).send('Forbidden');
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (!decoded?.userId) {
+            return res.status(401).json({ error: "Unauthorized: Invalid token" });
+        }
         const user = await getUserById(userId);
         if (!user) {
             return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${userId}`});
@@ -342,6 +346,9 @@ app.post("/users/authenticate", async (req, res) => {
             id: decoded.userId,
         });
     } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+            return res.status(401).json({ error: 'Token expired' });
+        }
         console.error('Error during authenticate: ', error);
         res.status(500).json({ error: 'Internal server error.' });
     }
@@ -533,9 +540,11 @@ app.get("/location", async (req, res) => {
         if (!location) {
             return res.status(404).json({ error: `No location found for user id: ${decoded.userId}` });
         }
-        console.log("Location: ", location);
         res.status(200).json({ location });
     } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+            return res.status(409).json({ message: 'Token expired' });
+        }
         console.error('Error fetching location: ', error);
         res.status(500).json({ error: 'Internal server error.' });
     }
@@ -554,6 +563,32 @@ app.post("/location", async (req, res) => {
         res.status(200).json({ message: "Location saved successfully." });
     } catch (error) {
         console.error('Error saving location: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+app.post("/alert", async (req, res) => {
+    try {
+        const { user_id, device_id} = req.body;
+        if (!user_id || !device_id) {
+            return res.status(400).json({ error: "User ID and device ID are required." });
+        }
+        const user = await findUserByPairId(user_id);
+        if (!user) {
+            return res.status(404).json({ error: `No user found with id: ${user_id}` });
+        }
+        let contact = user.contact
+        if (!contact) {
+            return res.status(404).json({ error: `No contact found for user id: ${user_id}` });
+        }
+        let message = user.username + "is in danger"
+        console.log("Alerting contacts: ", contact);
+        for (let i = 0; i < contact.length; i++) {
+
+            notifyUser(contact[i], { content: message }, 'alert');
+        }
+        return res.status(200).json({ message: "Alert sent successfully." });
+    } catch (error) {
+        console.error('Error fetching location: ', error);
         res.status(500).json({ error: 'Internal server error.' });
     }
 });

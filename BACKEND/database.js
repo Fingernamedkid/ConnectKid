@@ -122,7 +122,6 @@ function generatePairid() {
 export async function findUserByPairId(pairId) {
   console.log(`Database : find user by pairId : ${pairId}`);
   const rows = await db.find({ pairId: pairId }).toArray();
-  console.log(rows[0]);
   return rows[0];
 }
 export async function pairUser(id1,id2){
@@ -178,7 +177,6 @@ export async function getUserById(id) {
       return null;
   }
 
-  console.log("Got user with id " + id + ": ", rows[0]);
   return rows[0];
 }
 export async function getUserByIdNoPasswordAndNoimage(id) {
@@ -377,19 +375,14 @@ export async function getDevices(id){
   console.log(rows);
   return rows;
 }
+
 export async function deleteDevice(id, device_id){
   console.log(`Database : delete device with id : ${id} and device_id : ${device_id}`);
   await location.deleteOne({$and:[{userid: id},{device_id: device_id}]});
   return true;
 }
-export async function verifyDevice(id, device_id){
-  console.log(`Database : verify device with id : ${id} and device_id : ${device_id}`)
-  const rows = await location.find({$and:[{_id: id},{device_id: device_id}]}).toArray();
-  console.log(rows[0]);
-  return rows[0];
-}
+
 export async function saveLocation(id, latitude, longitude, velocity){
-  console.log(`Database : save location with id : ${id} and latitude : ${latitude}, longitude : ${longitude}, velocity : ${velocity}`)
   await location.updateOne({ device_id: id }, { $set: { latitude: latitude, longitude: longitude, velocity: velocity } });
   return true;
 }
@@ -411,7 +404,6 @@ export async function getContactslocation(id) {
       });
     }
   }
-  console.log(contacts);
   return contacts;
 }
 export async function getLocationByPairId(id){

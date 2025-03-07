@@ -13,7 +13,6 @@ import ChatPage from './chatPage';
 const RootLayout = () => {
   const { token: queryToken } = useGlobalSearchParams();
   const [token, setToken] = React.useState(queryToken);
-
   React.useEffect(() => {
     const fetchToken = async () => {
       try {

@@ -14,7 +14,7 @@ const ViewProfile = () => {
                 router.push(`/${userId}/profile`);
             } else {
                 console.log('No user ID available');
-                router.push('/auth/signin');
+                router.push('/');
             }
         }, [userId, router])
     );

@@ -27,17 +27,22 @@ export default function Map() {
 
     const googleMapsApiKey = GoogleMapsApiKey;
     useFocusEffect(
-
         useCallback(() => {
-            console.log('Fetching contacts location...');
-            fetchContactsLocation().then((contacts) => {
-
-                setContacts(contacts);
-                mapRef.current?.fitToCoordinates(contacts, {
-                    edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-                    animated: true,
+            const fetchContacts = () => {
+                console.log('Fetching contacts location...');
+                fetchContactsLocation().then((contacts) => {
+                    setContacts(contacts);
+                    mapRef.current?.fitToCoordinates(contacts, {
+                        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+                        animated: true,
+                    });
                 });
-            });
+            };
+
+            fetchContacts();
+            const intervalId = setInterval(fetchContacts, 10000);
+
+            return () => clearInterval(intervalId);
         }, [])
     );
 

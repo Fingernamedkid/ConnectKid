@@ -1,8 +1,10 @@
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import app from './app'; // Ensure your app.js exports the Express app
-import { run } from './database'; // Ensure your db.js exports the run function
+import WebSocket from 'ws'; // Import the WebSocket class
+import { run, getLocationByPairId} from './database'; // Ensure your db.js exports the run function
 import * as database from './database';  // Adjust the path accordingly
+
  const SECRET_KEY = 'your_secret_key';
 let token;
 let invalidToken = 'invalidToken';
@@ -172,7 +174,74 @@ describe('Backend API Tests', () => {
         expect(response.body.error).toBe('Unauthorized: Invalid token');
     });
 
+    test('GET /users/image/:id - success', async () => {
+        const loginResponse = await request(app)
+            .post('/users/signin')
+            .send({ usernameOrEmail: 'mockUserencrypt', password: 'mockPassword' });
 
+        token = loginResponse.body.token;
+        const response = await request(app)
+            .get('/users/image/3')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('image64');
+    });
+
+    test('GET /users/image/:id - no token', async () => {
+        const response = await request(app)
+            .get('/users/image/3');
+
+        expect(response.status).toBe(403);
+        expect(response.text).toBe('Forbidden');
+    });
+    test('GET /users/image/:id - fails with no param', async () => {
+        const response = await request(app)
+            .get('/users/image/');
+        expect(response.status).toBe(403);
+    });
+    test('GET /contacts - using credentials from mockUserencrypt', async () => {
+        const loginResponse = await request(app)
+            .post('/users/signin')
+            .send({ usernameOrEmail: 'mockUserencrypt', password: 'mockPassword' });
+
+        const token = loginResponse.body.token;
+        const response = await request(app)
+            .get('/contacts')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('contacts');
+        expect(Array.isArray(response.body.contacts)).toBe(true);
+    });
+    test('GET /users/image/:id - unauthorized (invalid token)', async () => {
+        const mockToken = jwt.sign(
+            { example: '123' },  // Payload
+            SECRET_KEY, 
+            { expiresIn: '1h' } // Expiry time
+        );
+        const response = await request(app)
+            .get('/users/image/3')
+            .set('Authorization', `Bearer ${mockToken}`);
+
+        expect(response.status).toBe(401);
+        expect(response.body.error).toBe('Unauthorized: Invalid token');
+    });
+
+    test('GET /users/image/:id - user not found', async () => {
+        const mockToken = jwt.sign(
+            { userId: '3' },  // Payload
+            SECRET_KEY, 
+            { expiresIn: '1h' } // Expiry time
+        );
+        const response = await request(app)
+            .get('/users/image/999') // Non-existent user ID
+            .set('Authorization', `Bearer ${mockToken}`)
+            .send();
+
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe(`Aucun utilisateur pour l'id : 999`);
+    });
     test('GET /contacts - server error', async () => {
         // Mock the getUserContacts function in the imported module
         jest.spyOn(database, 'getUserContacts').mockImplementationOnce(() => {
@@ -527,7 +596,7 @@ describe('Backend API Tests', () => {
     expect(deleteUser2.status).toBe(200);
     });
 
-
+    
     test('POST /pairDevice and methods that relate to it', async () => {
         // Step 1: Create a new user
         const createUserResponse = await request(app)
@@ -703,6 +772,267 @@ test('Conversations', async () => {
         .set('Authorization', `Bearer ${token2}`); // Use User 2's token for authentication
     expect(deleteUserResponse2.status).toBe(200);
 });
+test('GET /location - success', async () => {
+    // Step 1: Create a new user
+    const createUserResponse = await request(app)
+        .post('/users')
+        .send({
+            username: 'user1',
+            password: 'password1',
+            email: 'user1@example.com'
+        });
+
+    // Check for valid status codes (200 or 201)
+    expect([200, 201]).toContain(createUserResponse.status);
+
+    // Step 2: Log in to get the JWT token
+    const loginResponse = await request(app)
+        .post('/users/signin')
+        .send({ usernameOrEmail: 'user1', password: 'password1' });
+
+    expect(loginResponse.status).toBe(200);
+    const token = loginResponse.body.token;
+
+    const userId = jwt.verify(token, SECRET_KEY).userId;
+
+    // Step 3: Get the pairId from the user information
+    const userInfoResponse = await request(app)
+        .get(`/users/${userId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+    expect(userInfoResponse.status).toBe(200);
+    const pairId = userInfoResponse.body.pairId;
+
+    // Step 4: Pair a device
+    const pairDeviceResponse = await request(app)
+        .post('/pairDevice')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            pair_id: pairId,
+            device_id: 'device1'
+        });
+
+    expect(pairDeviceResponse.status).toBe(200);
+    expect(pairDeviceResponse.body.message).toBe('Device paired successfully.');
+
+    // Step 5: Save location for the user
+    const locationResponse = await request(app)
+        .post('/location')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            user_id: pairId,
+            lat: 40.7128,
+            lon: -74.0060,
+            velocity: 10,
+            device_id: 'device1'
+        });
+
+    expect(locationResponse.status).toBe(200);
+    expect(locationResponse.body.message).toBe('Location saved successfully.');
+
+    // Step 6: Get the location
+    const getLocationResponse = await request(app)
+        .get('/location')
+        .set('Authorization', `Bearer ${token}`);
+
+    expect(getLocationResponse.status).toBe(200);
+    expect(getLocationResponse.body).toHaveProperty('location');
+
+    // Step 7: Delete the paired device
+    const deleteDeviceResponse = await request(app)
+        .delete('/device')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            device_id: 'device1'
+        });
+
+    expect(deleteDeviceResponse.status).toBe(200);
+    expect(deleteDeviceResponse.body.message).toBe('Device deleted successfully.');
+
+    // Step 8: Delete the user
+    const deleteUserResponse = await request(app)
+        .delete(`/users/${userId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+    expect(deleteUserResponse.status).toBe(200);
+    expect(deleteUserResponse.body.message).toBe('Success');
+});
+
+test('GET /location - unauthorized (no token)', async () => {
+    const response = await request(app)
+        .get('/location');
+
+    expect(response.status).toBe(403);
+    expect(response.text).toBe('Forbidden');
+});
+
+test('GET /location - unauthorized (invalid token)', async () => {
+    const mockToken = jwt.sign(
+        { example: '123' },  // Payload
+        SECRET_KEY, 
+        { expiresIn: '1h' } // Expiry time
+    );
+    const response = await request(app)
+        .get('/location')
+        .set('Authorization', `Bearer ${mockToken}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe('Unauthorized: Invalid token');
+});
+
+test('GET /location - user not found', async () => {
+    const mockToken = jwt.sign(
+        { userId: '999' },  // Non-existent user ID
+        SECRET_KEY, 
+        { expiresIn: '1h' } // Expiry time
+    );
+    const response = await request(app)
+        .get('/location')
+        .set('Authorization', `Bearer ${mockToken}`);
+
+    expect(response.status).toBe(500);
+});
+test('/alert - missing params', async () => {
+    const response = await request(app)
+        .post('/alert')
+        .send({
+            user_id: 1,
+            alert_type: 'SOS'
+        });
+
+    expect(response.status).toBe(400);
+});
+test('/alert - success', async () => {
+    // Step 1: Log in to get the JWT token
+    const loginResponse = await request(app)
+        .post('/users/signin')
+        .send({ usernameOrEmail: 'mockUserencrypt', password: 'mockPassword' });
+
+    expect(loginResponse.status).toBe(200);
+    const token = loginResponse.body.token;
+
+    // Step 2: Send an alert
+    const alertResponse = await request(app)
+        .post('/alert')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            user_id: 'WYODAD',
+            device_id: 'RaspberryPi'
+        });
+
+    expect(alertResponse.status).toBe(200);
+    expect(alertResponse.body.message).toBe('Alert sent successfully.');
+});
+test('WebSocket connection - online status', (done) => {
+    const token = jwt.sign({ userId: '3' }, SECRET_KEY, { expiresIn: '1h' });
+    const ws = new WebSocket(`ws://localhost:8082?token=${token}`);
+
+    ws.on('open', () => {
+        setTimeout(async () => {
+            const user = await database.getUserById('3');
+            expect(user.status).toBe('offline');
+            ws.close();
+        }, 1000);
+    });
+
+    ws.on('close', async () => {
+        // Check if the user status is updated to offline
+        setTimeout(async () => {
+            const user = await database.getUserById('3');
+            expect(user.status).toBe("offline");
+            done();
+        }, 1000);
+    });
+
+    ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        done(error);
+    });
+});
+
+test('WebSocket connection - invalid token', (done) => {
+    const ws = new WebSocket(`ws://localhost:8082?token=invalidToken`);
+
+    ws.on('close', () => {
+        // The connection should be closed immediately due to invalid token
+        done();
+    });
+
+    ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        done(error);
+    });
+});
+test('GET /device - success', async () => {
+    // Step 1: Create a new user
+    const createUserResponse = await request(app)
+        .post('/users')
+        .send({
+            username: 'user1',
+            password: 'password1',
+            email: 'user1@example.com'
+        });
+
+    // Check for valid status codes (200 or 201)
+    expect([200, 201]).toContain(createUserResponse.status);
+
+    // Step 2: Log in to get the JWT token
+    const loginResponse = await request(app)
+        .post('/users/signin')
+        .send({ usernameOrEmail: 'user1', password: 'password1' });
+
+    expect(loginResponse.status).toBe(200);
+    const token = loginResponse.body.token;
+
+    const userId = jwt.verify(token, SECRET_KEY).userId;
+
+    // Step 3: Get the pairId from the user information
+    const userInfoResponse = await request(app)
+        .get(`/users/${userId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+    expect(userInfoResponse.status).toBe(200);
+    const pairId = userInfoResponse.body.pairId;
+
+    // Step 4: Pair a device
+    const pairDeviceResponse = await request(app)
+        .post('/pairDevice')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            pair_id: pairId,
+            device_id: 'device1'
+        });
+
+    expect(pairDeviceResponse.status).toBe(200);
+    expect(pairDeviceResponse.body.message).toBe('Device paired successfully.');
+
+    // Step 5: Get the device
+    const getDeviceResponse = await request(app)
+        .get('/device')
+        .set('Authorization', `Bearer ${token}`);
+
+    expect(getDeviceResponse.status).toBe(200);
+    expect(getDeviceResponse.body).toHaveProperty('devices');
+    expect(Array.isArray(getDeviceResponse.body.devices)).toBe(true);
+    // Step 6: Delete the paired device
+    const deleteDeviceResponse = await request(app)
+        .delete('/device')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            device_id: 'device1'
+        });
+
+    expect(deleteDeviceResponse.status).toBe(200);
+    expect(deleteDeviceResponse.body.message).toBe('Device deleted successfully.');
+
+    // Step 7: Delete the user
+    const deleteUserResponse = await request(app)
+        .delete(`/users/${userId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+    expect(deleteUserResponse.status).toBe(200);
+    expect(deleteUserResponse.body.message).toBe('Success');
+});
 test('/location - missing params', async () => {
     const response = await request(app)
         .post('/location')
@@ -717,5 +1047,17 @@ test('/location - missing params', async () => {
     expect(response.body.error).toBe('User ID, latitude, longitude, velocity, and device ID are required.');
 }
 );
+test('GET /device- no token', async () => {
+    const response = await request(app)
+        .get('/device');
 
+    expect(response.status).toBe(403);
+});
+test('GET /location/:pairId - success', async () => {
+    const pairId = 'WYODAD';
+    const location = await getLocationByPairId(pairId);
+    expect(location).toBeDefined();
+    expect(location).toHaveProperty('latitude');
+    expect(location).toHaveProperty('longitude');
+});
 });

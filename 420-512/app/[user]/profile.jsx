@@ -11,6 +11,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserId } from '../../contexts/UserIdContext';
 import Animated, { Easing, withTiming, useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
 import { Alert } from 'react-native';
+import { Platform } from 'react-native';
+
 const WIDTH = Dimensions.get('window').width;
 
 const ProfileField = ({ label, value, isEditing, onChangeText, colors }) => (
@@ -212,8 +214,14 @@ const Profile = () => {
       if (res) {
         
         Alert.alert('Contact added successfully');
+        if (Platform.OS === 'web') {
+          alert('Contact added successfully');
+        }
       } else {
         Alert.alert('Failed to add contact')
+        if(Platform.OS === 'web') {
+          alert('Failed to add contact')
+        }
       }
     } catch (error) {
       console.error('Add to contact error:', error);
