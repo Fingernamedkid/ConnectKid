@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { IP_BACKEND } from '../config';
+import { IP_BACKEND, IP_BACKEND_PH } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
 export const api = axios.create({
-    baseURL:IP_BACKEND
+    baseURL:IP_BACKEND_PH
 })
 
 // Function to set the JWT in AsyncStorage
@@ -99,6 +99,7 @@ export async function fetchProfileData(id){
         console.log(`Trying to fetch profileData with id: ${id}`);
         
         const profileData = await api.get(`/users/${id}`);
+        await AsyncStorage.setItem('userId', id);
         if(!(profileData.status == 200)) throw Error('Failed to fetch profile');
         return profileData.data
     } catch (error){
@@ -135,19 +136,145 @@ export async function deleteUserById(id){
         throw new Error(error)
     }
 }
+export async function addConversation(participantUn,participantDeux){
+    try {
+        const conversationData = {
+            participant1 : participantUn,
+            participant2 : participantDeux,
+        }
+        console.log("Trying to create a conversation");
+        console.log(conversationData)
+        const conversation =  await api.post("/conversation/add", conversationData)
+        if (!conversation){
+            throw new Error('no response : 404')
+        }
+        if( conversation.status != 200) throw new Error('responded with error')
+            return conversation
+    } catch (error) {
+        console.log(`axios.js : ${error}`)
+    }
+
+}
+export async function getConversation(id){
+    try {
+        console.log("Trying to get a conversation");
+
+        const conversation =  await api.get(`/conversation/${id}`)
+        if (!conversation){
+            throw new Error('no response : 404')
+        }
+        if( conversation.status != 200) throw new Error('responded with error')
+            return conversation;
+    } catch (error) {
+        console.log(`axios.js : ${error}`)
+    }
+
+}
+export async function fetchContactsLocation(){
+    try {
+        console.log("Trying to get contacts location");
+        const contacts =  await api.get(`/location`)
+        if (!contacts){
+            throw new Error('no response : 404')
+        }
+        console.log("Contacts got", contacts.data)
+        if( contacts.status != 200) throw new Error('responded with error')
+            return contacts.data.location;
+    }catch(error){
+        console.log(`axios.js : ${error}`)
+    }
+}
+export async function fetchDevice(){
+    try {
+        console.log("Trying to get device");
+        const device =  await api.get(`/device`)
+        if (!device){
+            throw new Error('no response : 404')
+        }
+        if (device.status === 404) {
+            return null;
+        }
+        if( device.status != 200) throw new Error('responded with error')
+            return device.data;
+    }catch(error){
+        console.log(`axios.js : ${error}`)
+    }
+}
+export async function deleteDevice(id){
+    try {
+        console.log("Trying to delete device");
+        const device =  await api.delete(`/device`, {
+            device_id: id
+        });
+        if (!device){
+            return false;
+
+        }
+        if( device.status != 200) throw new Error('responded with error')
+        return true;
+    }
+    catch(error){
+        return false;
+        console.log(`axios.js : ${error}`)
+    }
+}
+export async function sendMessages(senderId, conversationId, content) {
+    try {
+        
+        const messageData = {
+            senderId: senderId, 
+            conversationId: conversationId,
+            content: content
+        };
+        console.log(senderId)
+
+        const message = await api.post("/messages/send", messageData, {
+            headers: {
+                Authorization: 'none',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        return message.data;
+    } catch (error) {
+        console.error(`Axios error: ${error.response ? error.response.data : error.message}`);
+    }
+}
+
+export async function getMessages(conversationId){
+    try {
+        console.log("Trying to get a conversation");
+    
+        const message =  await api.get(`/messages/${conversationId}`);
+        
+        if (!message){
+            throw new Error('no response : 404')
+        }
+        if( message.status != 200) throw new Error('responded with error')
+            return message;
+    } catch (error) {
+        console.log(`axios.js : ${error}`)
+    }
+
+}
+
 export async function getIdFromJwt(){
     try{
         console.log("Trying to get the id from jwt")
         const id = await api.post('/users/authenticate')
 
         if(!id ){
-            throw new Error('no response : 404')
+            return null
         }
-        if( id.status != 200) throw new Error('responded with error')
+        if( id.status != 200) return null
         return id.data.id
     }
     catch(error){
-        console.log(`axios.js : ${error}`)
+        if (error.response && error.response.status === 401) {
+            console.log("No JWT provided");
+        } else {
+            console.log(`axios.js : ${error}`);
+        }
     }
 }
 export async function fetchBlocks(){
@@ -166,7 +293,7 @@ export async function fetchBlocks(){
     }
 }
 export async function fetchUserInfo(id){
-    try{
+    try{ 
         const token = await getToken();
         console.log(`JWT token: ${token}`);
         console.log(`axios.js : fetchUserInfo`)
@@ -213,13 +340,33 @@ export async function pairWith( pairId){
 export async function fetchContacts(){
     try{
         console.log(`axios.js : fetchContacts`)
-        const contacts = await api.get(`/users/contacts`)
+        const contacts = await api.get(`/contacts`)
         if(contacts.status != 200){
             throw new Error('axios.js : Failed to fetch contacts')
         }
+        console.log("Contact got. Fetching image")
+        for (let i = 0; i < contacts.data.contacts.length; i++) {
+            console.log(`Fetching image for ${contacts.data.contacts[i]._id}`)
+            const image = await fetchImage(contacts.data.contacts[i]._id)
+            contacts.data.contacts[i].image64 = image.image64
+        }
+        console.log(contacts.data)
         return contacts.data
     }catch(error){
         console.log("Error fetchingContacts : ",error)
+    }
+}
+export async function fetchImage(id){
+    try{
+        console.log(`axios.js : fetchImage`)
+        const image = await api.get(`/users/image/${id}`)
+        if(image.status != 200){
+            throw new Error('axios.js : Failed to fetch image')
+        }
+        
+        return image.data
+    }catch(error){
+        console.log("Error fetchingImage : ",error)
         throw new Error(error)
     }
 }
@@ -241,4 +388,4 @@ export async function sendDatas(listcoordnate, id, steps){
         console.log("Error fetchingBlocks : ",error)
         throw new Error(error)
     }
-}
+} 

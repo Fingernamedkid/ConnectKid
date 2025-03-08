@@ -1,8 +1,30 @@
 import dotenv from 'dotenv';
 import { MongoClient,ServerApiVersion } from 'mongodb';
 import { encryptPassword, decryptPassword } from './password.js';
+import { ObjectId } from 'mongodb';
 // -----------------------------------------          Config          ----------------------------------------------
+// const conversationSchema = {
+//   _id: ObjectId,
+//   participants: [Number], 
+//   lastMessage: {
+//     content: String,
+//     sender: Number,
+//     timestamp: Date
+//   },
+//   createdAt: Date,
+//   updatedAt: Date
+// }
 
+
+
+// const messageSchema = {
+//   _id: ObjectId,
+//   conversationId: ObjectId,
+//   sender: Number, 
+//   content: String,
+//   timestamp: Date,
+//   read: Boolean
+// }
 dotenv.config({ path: './setup.env' });
 const uri = process.env.URL
 const bd = process.env.DATABASE
@@ -15,17 +37,53 @@ const client = new MongoClient(uri, {
     }
   });
 let db;
+let conversations;
+let messages; 
+let location;
 export async function run() {
     try {
       await client.connect();
       await client.db(bd).command({ ping: 1 });
       db = client.db(bd).collection(coll);
+      conversations = client.db(bd).collection('conversations');
+      messages = client.db(bd).collection('messages')
+      location = client.db(bd).collection('location')
+      await conversations.createIndex({ participants: 1 });
+      await messages.createIndex({ conversationId: 1 });
+      await messages.createIndex({ sender: 1 });
+      await messages.createIndex({ timestamp: -1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } catch(exception){
         console.log(exception)
     }
   }
 
+//   export async function run() {
+//     try {
+//         await client.connect();
+//         await client.db(bd).command({ ping: 1 });
+        
+//         // Initialiser les collections
+//         const database = client.db(bd);
+//         usersCollection = database.collection(coll);
+//         conversationsCollection = database.collection('conversations');
+//         messagesCollection = database.collection('messages');
+
+//         // Créer les index nécessaires
+//         await conversationsCollection.createIndex({ participants: 1 });
+//         await messagesCollection.createIndex({ conversationId: 1 });
+//         await messagesCollection.createIndex({ sender: 1 });
+//         await messagesCollection.createIndex({ timestamp: -1 });
+
+//         console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        
+//         // Rendre la collection users disponible pour les fonctions existantes
+//         db = usersCollection;
+        
+//     } catch(exception) {
+//         console.log(exception);
+//     }
+// }
 // -----------------------------------------          Functions          ----------------------------------------------
 
 export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, password) {
@@ -34,6 +92,7 @@ export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, passw
   console.log(rows[0]);
   if (rows.length > 0) {
     const user = rows[0];
+    console.log()
     const passworddecrypt = decryptPassword(user.password);
     console.log(passworddecrypt);
     console.log(password);
@@ -63,7 +122,6 @@ function generatePairid() {
 export async function findUserByPairId(pairId) {
   console.log(`Database : find user by pairId : ${pairId}`);
   const rows = await db.find({ pairId: pairId }).toArray();
-  console.log(rows[0]);
   return rows[0];
 }
 export async function pairUser(id1,id2){
@@ -119,6 +177,19 @@ export async function getUserById(id) {
       return null;
   }
 
+  return rows[0];
+}
+export async function getUserByIdNoPasswordAndNoimage(id) {
+  console.log(`Database : get users by Id : ${id}`);
+  id = parseInt(id);
+
+  const rows = await db.find({_id: id}).project({ password: 0 }).toArray();
+  if (rows.length === 0) {
+      console.log(`No user found with id ${id}`);
+      return null;
+  }
+  
+
   console.log("Got user with id " + id + ": ", rows[0]);
   return rows[0];
 }
@@ -133,7 +204,6 @@ export async function updateUserProfile(userData){
       $set: {
         username: userData.username,
         email: userData.email,
-        phonenum: userData.phonenum,
         image64: userData.profilePic
       }
     };
@@ -147,7 +217,8 @@ export async function getUserContacts(id){
     const user = await getUserById(id);
     let contacts = [];
     for (let i = 0; i < user.contact.length; i++) {
-      let contact = await getUserById(user.contact[i]);
+      let contact = await getUserByIdNoPasswordAndNoimage(user.contact[i]);
+
       contacts.push(contact);
     }
     console.log(contacts);
@@ -161,14 +232,193 @@ export async function deleteUserById(id){
     return result.deletedCount;
 }
 
-async function testCreateUser() {
-  try {
-      await run(); // Ensure DB connection
-      const user = await createUser('test@example.com', 'testuser', 'password123');
-      console.log('User created successfully:', user);
-  } catch (err) {
-      console.error('Error creating user:', err);
+// async function testCreateUser() {
+//   try {
+//       await run(); // Ensure DB connection
+//       const user = await createUser('test@example.com', 'testuser', 'password123');
+//       console.log('User created successfully:', user);
+//   } catch (err) {
+//       console.error('Error creating user:', err);
+//   }
+// }
+
+
+
+export async function createConversation(participant1Id, participant2Id) {
+  console.log("Creation d'une conversation")
+  // let largestId = await conversations.find({}).sort({ _id: -1 }).limit(1).toArray();
+  // let conversationId = largestId.length > 0 ? largestId[0]._id + 1 : 1;
+  const existingConv = await conversations.findOne({
+    participants: { 
+      $all: [parseInt(participant1Id), parseInt(participant2Id)] 
+    }
+  });
+  if (existingConv) {
+    return existingConv;
   }
+  const newConversation = {
+    participants: [parseInt(participant1Id), parseInt(participant2Id)],
+    lastMessage: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+  const result = await conversations.insertOne(newConversation);
+  return result;
 }
 
 
+export async function sendMessage(senderId, conversationId, content) {
+
+  const message = {
+    conversationId: conversationId,
+    sender: parseInt(senderId),
+    content: content,
+    timestamp: new Date(),
+    read: false
+  };
+
+  await messages.insertOne(message);
+
+
+  await conversations.updateOne(
+    { _id: conversationId },
+    { 
+      $set: {
+        lastMessage: {
+          content: content,
+          sender: parseInt(senderId),
+          timestamp: new Date()
+        },
+        updatedAt: new Date()
+      }
+    }
+  );
+
+  return message;
+}
+
+
+export async function getConversationMessages(conversationId, limit = 50) {
+
+  
+  return await messages.find({ conversationId: conversationId })
+    .sort({ timestamp: -1 })
+    .limit(limit)
+    .toArray();
+}
+
+
+export async function getUserConversations(userId) {
+  return await conversations.find({
+    participants: parseInt(userId)
+  }).sort({ updatedAt: -1 }).toArray();
+}
+
+
+export async function markMessagesAsRead(conversationId, userId) {
+
+  await messages.updateMany(
+    {
+      conversationId: conversationId,
+      sender: { $ne: parseInt(userId) },
+      read: false
+    },
+    { $set: { read: true } }
+  );
+}
+
+// async function testCreateUser() {
+//   try {
+//       await run(); 
+//       const user = await getConversationMessages('67b57730fa7746c098680521', 10);
+//       console.log('MESSAGES created successfully:', user);
+//   } catch (err) {
+//       console.error('Error creating user:', err);
+//   }
+// }
+// testCreateUser();
+
+async function testGetMessages() {
+  try {
+    await run();
+    const conversationId = '67b57730fa7746c098680521';
+    const conversation1 = new ObjectId(conversationId);
+    const messages = await getConversationMessages(conversation1, 10);
+    
+    console.log(`Total messages found: ${messages.length}`);
+    
+    messages.forEach((msg, index) => {
+      console.log(`Message ${index + 1}:`, new Date(msg.timestamp).toISOString());
+      console.log(msg.content?.substring(0, 50));
+    });
+
+  } catch (err) {
+    console.error('Error in test:', err);
+    throw err;
+  }
+}
+export async function addDevice(id, device_id){
+  console.log(`Database : add device with id : ${id} and device_id : ${device_id}`);
+  await location.insertOne({
+    userid: id,
+    device_id: device_id,
+    latitude: "45.5088",
+    longitude: "-73.5878",
+    velocity: 0
+  });
+  return true;
+
+} 
+export async function getDevices(id){
+  console.log(`Database : get devices with id : ${id}`);
+  const rows = await location.find({userid: id}).toArray();
+  console.log(rows);
+  return rows;
+}
+
+export async function deleteDevice(id, device_id){
+  console.log(`Database : delete device with id : ${id} and device_id : ${device_id}`);
+  await location.deleteOne({$and:[{userid: id},{device_id: device_id}]});
+  return true;
+}
+
+export async function saveLocation(id, latitude, longitude, velocity){
+  await location.updateOne({ device_id: id }, { $set: { latitude: latitude, longitude: longitude, velocity: velocity } });
+  return true;
+}
+export async function getContactslocation(id) {
+  console.log(`Database : get contacts location with id : ${id}`);
+  const user = await getUserById(id);
+  let contacts = [];
+  for (let i = 0; i < user.contact.length; i++) {
+    let contact = await getUserById(user.contact[i]);
+    let location = await getLocationByPairId(contact.pairId );
+    if (location) {
+      contacts.push({
+        userid: location.userid,
+        device_id: location.device_id,
+        latitude: parseFloat(location.latitude),
+        longitude: parseFloat(location.longitude),
+        velocity: parseFloat(location.velocity),
+        image64: contact.image64
+      });
+    }
+  }
+  return contacts;
+}
+export async function getLocationByPairId(id){
+  console.log(`Database : get location with id : ${id}`);
+  const rows = await location.find({userid: id}).toArray();
+  console.log(rows[0]);
+  return rows[0];
+}
+export async function updateUserStatus(userId, isOnline) {
+  const status = isOnline ? 'online' : 'offline';
+  return await db.updateOne(
+    { _id: userId },
+    { $set: { status: status } }
+  );
+}
+testGetMessages()
+  .then(() => console.log('Test completed'))
+  .catch(err => console.error('Test failed:', err));

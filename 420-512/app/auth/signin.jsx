@@ -8,11 +8,11 @@ import { signIn } from '../../lib/axios'
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Crypto from 'expo-crypto';
-
+import { useUserId } from '../../contexts/UserIdContext'
 const  WIDTH_BTN = Dimensions.get('window').width - 56
 
 const signin = () => { 
-  
+  const { setUserId } = useUserId()
   const router = useRouter()
   const { theme } = useTheme()
   const [alertIdentifier, setAlertIdentifier] = useState(false)
@@ -51,7 +51,8 @@ const signin = () => {
 
       setLoading(false)
       setForm({usernameOrEmail:"",password:""})
-      router.push(`../${result.id}/profileView`)
+      setUserId(result.id)
+      router.push(`../${result.id}/profile`)
 
     } catch(error){
       setLoading(false)
@@ -74,7 +75,7 @@ const signin = () => {
           >
       <SafeAreaView>
         <ScrollView showsVerticalScrollIndicator={false}>
-              <Text className="text-7xl font-bold tracking-[2px] text-center pt-24 pb-16" style={{color:colors.primary}}>FitTrackr</Text>
+              <Text className="text-7xl font-bold tracking-[2px] text-center pt-24 pb-16" style={{color:colors.primary}}>ConnectKid</Text>
               <View className="flex-1 justify-center items-center gap-8" >
                 <Text className="text-4xl font-semibold pb-4" style={{color:colors.text}}>Connectez-vous</Text>
                 {loading ? <ActivityIndicator size="large" color={colors.primary} /> : null}
@@ -83,7 +84,7 @@ const signin = () => {
                 <View
                   className="items-center justify-center py-5 rounded-lg border-2" style={[{width:WIDTH_BTN,color:colors.text,backgroundColor:colors.lightAlert,borderColor:colors.alert} ]}
                 >
-                  <Text className="text-md" style={{color:colors.alert}}>{msgErreur}</Text> 
+                  <Text className="text-md" style={{color:colors.text}}>{msgErreur}</Text> 
                 </View>
                 : null
                 }
