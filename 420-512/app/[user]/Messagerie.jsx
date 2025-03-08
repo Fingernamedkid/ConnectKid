@@ -217,13 +217,14 @@ const Messagerie = () => {
     }
   };
 
-  const chatPage = (conversationId, username) => {
+  const chatPage = (conversationId, username, number) => {
     router.push({
       pathname: '/chatPage',
       params: {
         conversationId,
         username,
-        sender: userId
+        sender: userId,
+        number
       }
     });
   };
@@ -243,7 +244,7 @@ const Messagerie = () => {
     const messageText = getLastMessageText(item.lastMessage);
     console.log(user)
     return (
-      <TouchableOpacity onPress={() => chatPage(item.id, user?.username)}>
+      <TouchableOpacity onPress={() => chatPage(item.id, user?.username, user?.phonenum)}>
         <View className="mb-4 p-4 bg-white rounded-lg shadow">
           <View className="flex-row items-center">
             {user?.image64 ? (
