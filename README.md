@@ -32,6 +32,7 @@ ConnectKid is an application designed to help parents stay connected with their 
   1. Input the **pair ID** of the child’s account into the Raspberry Pi setup.
   2. The pairing will be saved for future use.
   3. Once the application starts, it will send the child’s location **every second** for real-time tracking.
+  4. The paired device can be deleted in the device section.
 
 ## Emergency Alert System
 - If your child is in danger, they can press the **emergency button**.
