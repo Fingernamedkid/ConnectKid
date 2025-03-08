@@ -122,7 +122,7 @@ const SignUp = () => {
                   { width: WIDTH_BTN, color: colors.text, backgroundColor: colors.lightAlert, borderColor: colors.alert },
                 ]}
               >
-                <Text style={{ color: colors.alert }}>{msgErreur}</Text>
+                <Text style={{ color: colors.text }}>{msgErreur}</Text>
               </View>
             )}
 

@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { IP_BACKEND } from '../config';
+import { IP_BACKEND, IP_BACKEND_PH } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
 export const api = axios.create({
-    baseURL:IP_BACKEND
+    baseURL:IP_BACKEND_PH
 })
 
 // Function to set the JWT in AsyncStorage
