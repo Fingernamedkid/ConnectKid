@@ -4,7 +4,8 @@
   "main": "expo-router/entry.js",
   "scripts": {
     "test": "jest --watchAll",
-    "start": "expo start",
+    "startexpo": "expo start",
+    "start": "node server.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
@@ -29,6 +30,7 @@
     "expo-router": "~4.0.5",
     "expo-sensors": "~14.0.1",
     "expo-status-bar": "~2.0.0",
+    "express": "^4.21.2",
     "jest-expo": "~52.0.1",
     "jest-mock-axios": "^4.8.0",
     "jsonwebtoken": "^9.0.2",

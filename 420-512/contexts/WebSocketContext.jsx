@@ -15,7 +15,7 @@ export const WebSocketProvider = ({ children, userid, token }) => {
       const userid = await getIdFromJwt();
       if (!token && !userid) return;
   
-      const ws = new WebSocket(`ws://localhost:8082?token=${token}`);
+      const ws = new WebSocket(`ws://https://connectkid-8798464258f9.herokuapp.com/?token=${token}`);
   
       ws.onopen = () => {
         console.log('Connected to WebSocket server');
