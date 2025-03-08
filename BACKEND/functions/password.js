@@ -33,7 +33,7 @@ import crypto from 'crypto';
 import dotenv from 'dotenv';
 
 const algorithm = 'aes-256-cbc';
-dotenv.config({ path: './.env' });
+dotenv.config({ path: './setup.env' });
 const secretKey = process.env.SECRETKEY;
 
 // Validate secret key

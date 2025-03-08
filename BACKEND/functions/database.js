@@ -25,7 +25,7 @@ import { ObjectId } from 'mongodb';
 //   timestamp: Date,
 //   read: Boolean
 // }
-dotenv.config({ path: './.env' });
+dotenv.config({ path: './setup.env' });
 const uri = process.env.URL
 const bd = process.env.DATABASE
 const coll = process.env.COLLECTION

@@ -1,0 +1,35 @@
+# Node.js modules
+node_modules/
+
+# Logs
+*.log
+
+# OS-generated files (macOS, Windows, etc.)
+.DS_Store       # macOS
+Thumbs.db       # Windows
+
+# Environment files
+.env            # Environment variables
+
+# npm package lock file (if you don't want it committed)
+package-lock.json
+yarn.lock
+420-512/coverage/*
+420-512/coverage/lcov.info
+420-512/coverage/lcov-report/index.html
+420-512/coverage/lcov-report/app/index.html
+420-512/coverage/lcov-report/app/index.jsx.html
+420-512/coverage/lcov-report/app/pedometer.jsx.html
+420-512/coverage/lcov-report/app/\[user]/index.html
+420-512/coverage/lcov-report/app/\[user]/profile.jsx.html
+420-512/coverage/lcov-report/app/\[user]/viewProfile.jsx.html
+420-512/coverage/lcov-report/app/\[user_id]/index.html
+420-512/coverage/lcov-report/app/\[user_id]/profileView.jsx.html
+420-512/coverage/lcov-report/app/auth/index.html
+420-512/coverage/lcov-report/app/auth/recovery.jsx.html
+420-512/coverage/lcov-report/app/auth/signin.jsx.html
+420-512/coverage/lcov-report/app/auth/signup.jsx.html
+420-512/coverage/lcov-report/app/camera/index.html
+420-512/coverage/lcov-report/app/camera/index.jsx.html
+420-512/coverage/lcov-report/app/leaderboard/index.html
+420-512/coverage/lcov-report/app/leaderboard/leaderboard.jsx.html

@@ -5,25 +5,13 @@ import cors from 'cors'
 import e from 'express';
 import { ObjectId } from 'mongodb';
 import { WebSocketServer } from 'ws';
-import dotenv from 'dotenv';
 
-dotenv.config({ path: './.env' });
 const SECRET_KEY = 'your_secret_key'; // Use a strong secret key in production
-const PORT = process.env.PORT || 8080;
+
 const app = express();
 run();
 
-
-// Use CORS middleware
-app.use(cors());
-
-app.use(express.json({ limit: '100mb' }));  // For parsing JSON payloads
-app.use(express.urlencoded({ limit: '100mb', extended: true }))
-const server = app.listen(PORT, () => {
-    console.log('Server is running on port 8080')
-})  
-
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ port: 8082 });
 console.log("Websocket server started on port 8082");
 wss.on('connection', (ws, req) => {
     const token = req.url.split('?token=')[1];
@@ -54,6 +42,12 @@ const notifyUser = (userId, message, type) => {
         }
     });
 };
+
+// Use CORS middleware
+app.use(cors());
+
+app.use(express.json({ limit: '100mb' }));  // For parsing JSON payloads
+app.use(express.urlencoded({ limit: '100mb', extended: true }))
 
 app.post("/users/signin", async (req, res) => {
     const { usernameOrEmail, password } = req.body;
@@ -605,3 +599,7 @@ app.use((err, req, res, next) => {
 })
 
 
+app.listen(8080, () => {
+    console.log('Server is running on port 8080')
+})  
+export default app;
