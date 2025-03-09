@@ -64,6 +64,7 @@ const Profile = () => {
   const router = useRouter();
   const refresh = useRef(false);
   const { userId, setUserId } = useUserId();
+
   const [pairid, setPairing] = useState(""); // Step 1: Define state for input
   const [profileData, setProfileData] = useState({
     username: "Default",
@@ -74,6 +75,11 @@ const Profile = () => {
     pairId: "PairId",
     type: "Parent"
   });
+  useEffect(() => {
+    if (glob.id) {
+      setUserId(glob.id);
+    }
+  }, [glob.id]);
 
   const [uiState, setUiState] = useState({
     isEditing: false,
@@ -103,6 +109,7 @@ const Profile = () => {
     try {
       await setToken('');
       setUserId('');
+      await AsyncStorage.clear();
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -211,11 +218,22 @@ const Profile = () => {
   const addToContact = async () => {
     try {
       const res = await pairWith(pairid); 
-      if (res) {
+      console.log(res)
+      if (res == 200) {
         
         Alert.alert('Contact added successfully');
         if (Platform.OS === 'web') {
           alert('Contact added successfully');
+        }
+      } else if (res == 404) {
+        Alert.alert('User not found')
+        if(Platform.OS === 'web') {
+          alert('User not found')
+        }
+      } else if (res == 400) {
+        Alert.alert('Invalid PairId')
+        if(Platform.OS === 'web') {
+          alert('Invalid PairId')
         }
       } else {
         Alert.alert('Failed to add contact')

@@ -5,6 +5,8 @@ import { ClusterProps, MarkerClusterer } from 'react-native-maps';
 import { GoogleMapsApiKey } from '../config';
 import { fetchContactsLocation } from '../lib/axios';
 import { useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 function MyClusterComponent(props) {
     return (
@@ -28,15 +30,26 @@ export default function Map() {
     const googleMapsApiKey = GoogleMapsApiKey;
     useFocusEffect(
         useCallback(() => {
-            const fetchContacts = () => {
-                console.log('Fetching contacts location...');
-                fetchContactsLocation().then((contacts) => {
+            const fetchContacts = async () => {
+                try {
+                    console.log('Fetching contacts location...');
+                    const contacts = await fetchContactsLocation();
                     setContacts(contacts);
-                    mapRef.current?.fitToCoordinates(contacts, {
+                    const formattedContacts = contacts.map(contact => ({
+                        latitude: Number(contact.latitude),
+                        longitude: Number(contact.longitude),
+                    }));
+                    mapRef.current?.fitToCoordinates(formattedContacts, {
                         edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
                         animated: true,
                     });
-                });
+                } catch (error) {
+                    const router = useRouter();
+
+                    await AsyncStorage.clear();
+                    router.push('/');
+
+                }
             };
 
             fetchContacts();
@@ -81,26 +94,29 @@ export default function Map() {
                         />
                     )}
                 >
-                    {contacts.map((contact, index) => (
-                        <Marker
-                            key={index}
-                            coordinate={{
-                                latitude: Number(contact.latitude),
-                                longitude: Number(contact.longitude),
-                            }}
-                        >
-                            <Image
-                                source={{ uri: "data:image/png;base64," + contact.image64 }}
-                                style={{
-                                    height: 40,
-                                    width: 40,
-                                    borderRadius: 50,
-                                    borderColor: contact.velocity < 10 ? 'green' : 'red', 
-                                    borderWidth: 2,
+                    {contacts.map((contact, index) => {
+                        console.log(contact);
+                        return (
+                            <Marker
+                                key={index}
+                                coordinate={{
+                                    latitude: Number(contact.latitude),
+                                    longitude: Number(contact.longitude),
                                 }}
-                            />
-                        </Marker>
-                    ))}
+                            >
+                                <Image
+                                    source={{ uri: "data:image/jpeg;base64,"+contact.image64 }}
+                                    style={{
+                                        height: 40,
+                                        width: 40,
+                                        borderRadius: 50,
+                                        borderColor: contact.velocity < 10 ? 'green' : 'red', 
+                                        borderWidth: 2,
+                                    }}
+                                />
+                            </Marker>
+                        );
+                    })}
                 </MarkerClusterer>
             </MapView>
         </View>

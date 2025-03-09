@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export const api = axios.create({
-    baseURL:IP_BACKEND_PH
+    baseURL:IP_BACKEND
 })
 
 // Function to set the JWT in AsyncStorage
@@ -100,6 +100,18 @@ export async function fetchProfileData(id){
         
         const profileData = await api.get(`/users/${id}`);
         await AsyncStorage.setItem('userId', id);
+        if(!(profileData.status == 200)) throw Error('Failed to fetch profile');
+        return profileData.data
+    } catch (error){
+        console.error('Error fetching profile data:', error);
+        throw new Error(error)
+    }
+}
+export async function fetchProfileDataForMessage(id){
+    try {
+        console.log(`Trying to fetch profileData with id: ${id}`);
+        
+        const profileData = await api.get(`/usercontact/${id}`);
         if(!(profileData.status == 200)) throw Error('Failed to fetch profile');
         return profileData.data
     } catch (error){
@@ -320,20 +332,14 @@ export async function pairWith( pairId){
             pairId: pairId
         };
         const response = await api.post(`/users/pair`, pairData);
-        if (response.status == 409) {
-            throw new Error('axios.js : Failed to fetch userInfo, user not found')
-        } else if (response.status == 404) {
-            throw new Error('axios.js : Cant find user to pair');
-        } else if (response.status != 200) {
-            throw new Error('axios.js : Failed to pair with user')
-        }
-        return response.data
+        return response.status;
     }catch(error){
         console.log("Error paring: ",error)
-        if (error.response && error.response.status === 404) {
-            return 'Failed to pair';
+        if (error.response) {
+            return error.response.status;
         }
-        throw new Error(error)
+        return 500;
+        
     }
 }
 
@@ -345,12 +351,12 @@ export async function fetchContacts(){
             throw new Error('axios.js : Failed to fetch contacts')
         }
         console.log("Contact got. Fetching image")
+        console.log(contacts.data.status)
         for (let i = 0; i < contacts.data.contacts.length; i++) {
             console.log(`Fetching image for ${contacts.data.contacts[i]._id}`)
             const image = await fetchImage(contacts.data.contacts[i]._id)
             contacts.data.contacts[i].image64 = image.image64
         }
-        console.log(contacts.data)
         return contacts.data
     }catch(error){
         console.log("Error fetchingContacts : ",error)

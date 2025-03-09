@@ -24,7 +24,7 @@ const server = app.listen(PORT, () => {
 })  
 
 const wss = new WebSocketServer({ server });
-console.log("Websocket server started on port 8082");
+console.log("Websocket server started on port 8080");
 wss.on('connection', (ws, req) => {
     const token = req.url.split('?token=')[1];
     if (!token) {
@@ -41,15 +41,23 @@ wss.on('connection', (ws, req) => {
     const userId = decoded.userId;
     ws.userId = userId;
     updateUserStatus(userId, true);
+    const interval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }));
+        }
+    }, 30000); 
     ws.on('close', () => {
+      clearInterval(interval);
       updateUserStatus(userId, false);
       console.log("Connection closed");
     });
   });
 
-const notifyUser = (userId, message, type) => {
+    const notifyUser = (userId, message, type) => {
     wss.clients.forEach((client) => {
+        console.log("Message userId: ", client);
         if (client.userId === userId && client.readyState === WebSocket.OPEN) {
+            console.log("Sending message to user: ", userId);
             client.send(JSON.stringify({ type: type, ...message }));
         }
     });
@@ -184,9 +192,9 @@ app.get("/users/:id", async (req, res) => {
             return res.status(401).json({ error: "Forbidden: badToken" });
         }
         
-        // if (decoded.userId != userId) {
-        //     return res.status(409).json({ error: "Forbidden: you are not allowed to get this info" });
-        // }
+         if (decoded.userId != userId) {
+            return res.status(409).json({ error: "Forbidden: you are not allowed to get this info" });
+         }
         // get user data
         const user = await getUserById(userId);
         console.log(userId);
@@ -208,6 +216,52 @@ app.get("/users/:id", async (req, res) => {
             phonenum: user.phonenum || "",
             pairId: user.pairId || "",
             type: user.type || ""
+        });
+    } catch (error) {
+        if (error instanceof jwt.JsonWebTokenError) {
+            return res.status(401).send('Invalid token'); // Handle JWT-specific errors
+        }
+        console.error('Error fetching profile Data: ', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+app.get("/usercontact/:id", async (req, res) => {
+    try {
+        const token = req.headers['authorization']?.split(' ')[1];
+        if (!token) return res.status(403).send('Forbidden');
+        const userId = req.params.id; 
+        if (!userId) {
+            return res.status(400).json({ error: "Request missing parameters" });
+        }
+        const decoded = jwt.verify(token, SECRET_KEY); 
+        if (!decoded?.userId) {
+            return res.status(401).json({ error: "Forbidden: badToken" });
+        }
+        
+        // if (decoded.userId != userId) {
+        //     return res.status(409).json({ error: "Forbidden: you are not allowed to get this info" });
+        // }
+        // get user data
+        const user = await getUserById(userId);
+        console.log(userId);
+        if (!user) {
+            return res.status(404).json({ error: `Aucun utilisateur pour l'id : ${_id}`});
+        }
+        console.log("Found user: ",user)
+        let steps = 0;
+        if (user.routes && user.routes.length !== 0) {
+            steps = user.routes[user.routes.length - 1].steps
+        }
+        console.log(steps)
+        // Return the information
+        res.status(200).json({
+            id: user._id,
+            username: user.username || "",
+            image64: user.image64 || "",
+            phonenum: user.phonenum || "",
+            pairId: user.pairId || "",
+            type: user.type || "",
+            status: user.status || ""
         });
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {
@@ -589,7 +643,7 @@ app.post("/alert", async (req, res) => {
         let message = user.username + "is in danger"
         console.log("Alerting contacts: ", contact);
         for (let i = 0; i < contact.length; i++) {
-
+            console.log("Alerting contact: ", contact[i]);
             notifyUser(contact[i], { content: message }, 'alert');
         }
         return res.status(200).json({ message: "Alert sent successfully." });

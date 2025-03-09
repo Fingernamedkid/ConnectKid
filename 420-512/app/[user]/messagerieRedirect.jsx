@@ -2,6 +2,7 @@ import { Link, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { useUserId } from '../../contexts/UserIdContext';
 import { Text, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ViewProfile = () => {
     const router = useRouter();
@@ -13,6 +14,16 @@ const ViewProfile = () => {
             if (userId) {
                 router.push(`/${userId}/Messagerie`);
             } else {
+                const clearAll = async () => {
+                    try {
+                        await AsyncStorage.clear();
+                        console.log('AsyncStorage cleared');
+                    } catch (e) {
+                        console.error('Failed to clear AsyncStorage', e);
+                    }
+                };
+
+                clearAll();
                 console.log('No user ID available');
                 router.push('/auth/signin');
             }

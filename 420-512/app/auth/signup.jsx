@@ -8,10 +8,13 @@ import { setToken, signUp } from '../../lib/axios';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
-
+import { useUserId } from '../../contexts/UserIdContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 const WIDTH_BTN = Dimensions.get('window').width - 56;
 
 const SignUp = () => {
+  const { setUserId } = useUserId();
   const router = useRouter();
   const { theme } = useTheme();
   const [alertUsername, setAlertUsername] = useState(false);
@@ -23,6 +26,14 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const colors = colorsPalette[theme];
 
+  useFocusEffect(
+    React.useCallback(() => {
+      const clearStorage = async () => {
+        await AsyncStorage.clear();
+      };
+      clearStorage();
+    }, [])
+  );
   const [form, setForm] = useState({
     username: '',
     email: '',
@@ -82,7 +93,8 @@ const SignUp = () => {
       const result = await signUp(form.username, form.email, form.password, form.type, form.phonenumber);
       setLoading(false);
       setForm({ username: '', email: '', password: '', type: 'Parent', phonenumber: '' });
-      router.push(`../${result.id}/profileView`);
+      setUserId(result.id);
+      router.push(`../${result.id}/profile`);
     } catch (error) {
       setLoading(false);
       console.log(error);
@@ -107,7 +119,7 @@ const SignUp = () => {
             className="text-7xl font-bold tracking-[2px] text-center pt-24 pb-16"
             style={{ color: colors.primary }}
           >
-            FitTrackr
+            ConnectKid
           </Text>
           <View className="flex-1 justify-center items-center gap-8">
             <Text className="text-4xl font-semibold pb-4" style={{ color: colors.text }}>

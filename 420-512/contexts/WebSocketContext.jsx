@@ -15,7 +15,7 @@ export const WebSocketProvider = ({ children, userid, token }) => {
       const userid = await getIdFromJwt();
       if (!token && !userid) return;
   
-      const ws = new WebSocket(`ws://https://connectkid-8798464258f9.herokuapp.com/?token=${token}`);
+      const ws = new WebSocket(`ws://localhost:8080/?token=${token}`);
   
       ws.onopen = () => {
         console.log('Connected to WebSocket server');
@@ -30,9 +30,9 @@ export const WebSocketProvider = ({ children, userid, token }) => {
             alert(`Notification: ${message.content}`);
           }
         } else if (message.type === 'alert') {
-          Alert.alert(`Alert: ${message.content} is in danger`);
+          Alert.alert(`Alert: ${message.content}`);
           if (Platform.OS === 'web') {
-            alert(`Alert: ${message.content} is in danger`);
+            alert(`Alert: ${message.content} `);
           }
         }
       };

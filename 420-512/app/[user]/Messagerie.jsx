@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, Modal, TextInput } from 'react-native';
-import { getConversation, fetchProfileData, getIdFromJwt, fetchContacts,addConversation } from '../../lib/axios';
+import { getConversation, fetchProfileDataForMessage, getIdFromJwt, fetchContacts,addConversation } from '../../lib/axios';
 import { useRouter } from 'expo-router';
-
+import { useGlobalSearchParams } from 'expo-router';
 const CreateConversationModal = ({ visible, onClose, onCreateConversation, userId }) => {
   const [contacts, setContacts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,7 +68,7 @@ const CreateConversationModal = ({ visible, onClose, onCreateConversation, userI
     >
       {item.image64 ? (
         <Image 
-          source={{ uri: item.image64 }}
+          source={{ uri: "data:image/jpeg;base64,"+item.image64 }}
           className="w-12 h-12 rounded-full mr-3"
         />
       ) : (
@@ -149,12 +149,12 @@ const Messagerie = () => {
   const [userId, setUserId] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const router = useRouter();
+  const glob = useGlobalSearchParams();
 
   const getId = async () => {
     const jwt = await getIdFromJwt();
     setUserId(jwt);
   };
-
   useEffect(() => {
     const initializeData = async () => {
       await getId();
@@ -189,7 +189,7 @@ const Messagerie = () => {
       const participantId = convo.participants.find(id => id !== userId);
       if (participantId && !userDetails[participantId]) {
         try {
-          const response = await fetchProfileData(participantId);
+          const response = await fetchProfileDataForMessage(participantId);
           if (response) {
             userDetails[participantId] = response;
           }
@@ -245,28 +245,34 @@ const Messagerie = () => {
     console.log(user)
     return (
       <TouchableOpacity onPress={() => chatPage(item.id, user?.username, user?.phonenum)}>
-        <View className="mb-4 p-4 bg-white rounded-lg shadow">
-          <View className="flex-row items-center">
-            {user?.image64 ? (
-              <Image 
-                source={{ uri: "data:image/jpeg;base64,"+user.image64 }}
-                className="w-12 h-12 rounded-full mr-3"
-              />
-            ) : (
-              <View className="w-12 h-12 rounded-full bg-gray-300 mr-3 justify-center items-center">
-                <Text className="text-gray-600 font-bold">{user?.username?.[0]?.toUpperCase()}</Text>
-              </View>
-            )}
-            <View className="flex-1">
-              <Text className="text-lg font-semibold">
-                {user?.username || 'Unknown User'}
-              </Text>
-              <Text className="text-gray-700 mt-1" numberOfLines={1}>
-                {messageText}
-              </Text>
-            </View>
+      <View className="mb-4 p-4 bg-white rounded-lg shadow">
+        <View className="flex-row items-center">
+        {user?.image64 ? (
+          <Image 
+          source={{ uri: "data:image/jpeg;base64," + user.image64 }}
+          className="w-12 h-12 rounded-full"
+          />
+        ) : (
+          <View className="w-12 h-12 rounded-full bg-gray-300 justify-center items-center">
+          <Text className="text-gray-600 font-bold">
+            {user?.username?.[0]?.toUpperCase()}
+          </Text>
           </View>
+        )}
+
+        {/* Status Indicator (Green if online, Gray if not) */}
+        <View className={`absolute bottom-0 right-0 w-12 h-12 ${user?.status === "online" ? "bg-green-500" : "bg-gray-900"} border-2 border-white rounded-full`} />
+        
+        <View className="flex-1 ml-3">
+          <Text className="text-lg font-semibold">
+          {user?.username || 'Unknown User'}
+          </Text>
+          <Text className="text-gray-700 mt-1" numberOfLines={1}>
+          {messageText}
+          </Text>
         </View>
+        </View>
+      </View>
       </TouchableOpacity>
     );
   };
@@ -308,7 +314,7 @@ const Messagerie = () => {
 
 export default Messagerie;// import React, { useEffect, useState } from 'react';
 // import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
-// import { getConversation, fetchProfileData, getIdFromJwt } from '../../lib/axios';
+// import { getConversation, fetchProfileDataForMessage, getIdFromJwt } from '../../lib/axios';
 // import { useRouter } from 'expo-router';
 
 // const Messagerie = () => {

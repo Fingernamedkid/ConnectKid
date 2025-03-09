@@ -9,9 +9,21 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Crypto from 'expo-crypto';
 import { useUserId } from '../../contexts/UserIdContext'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useFocusEffect } from '@react-navigation/native'
+
 const  WIDTH_BTN = Dimensions.get('window').width - 56
 
 const signin = () => { 
+  useFocusEffect(
+    React.useCallback(() => {
+      const clearStorage = async () => {
+        await AsyncStorage.clear();
+      };
+      clearStorage();
+    }, [])
+  );
+
   const { setUserId } = useUserId()
   const router = useRouter()
   const { theme } = useTheme()

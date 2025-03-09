@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { getMessages, sendMessages } from '../../lib/axios';
 import { useLocalSearchParams } from 'expo-router';
-
+import { useRouter } from 'expo-router';
+import { useUserId } from '../../contexts/UserIdContext';
 const ChatPage = () => {
+  const router = useRouter();
+  const { userId } = useUserId();
   const { conversationId, username, sender } = useLocalSearchParams();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -55,6 +58,15 @@ const ChatPage = () => {
     }
   };
 
+  const goBackToConversations = () => {
+    if (userId) {
+      router.push(`/${userId}/Messagerie`);
+    } else {
+      router.push('/auth/signin');
+    }
+    
+  };
+
   return (
     <View className="flex-1 bg-gray-100 p-4">
       <View className="flex-1 bg-white rounded-lg shadow-lg p-4">
@@ -62,7 +74,7 @@ const ChatPage = () => {
           <View className="flex-1 items-center">
             <Text className="text-xl font-semibold text-gray-700">{username}</Text>
           </View>
-          <TouchableOpacity onPress={() => window.history.back()} className="p-2">
+          <TouchableOpacity onPress={goBackToConversations} className="p-2">
             <Text className="text-gray-500">Back</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={appelerUnAmi} className="p-2">
