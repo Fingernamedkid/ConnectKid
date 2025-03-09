@@ -206,6 +206,7 @@ export async function fetchDevice(){
         if (device.status === 404) {
             return null;
         }
+        console.log("Device got", device.data)
         if( device.status != 200) throw new Error('responded with error')
             return device.data;
     }catch(error){
@@ -215,19 +216,17 @@ export async function fetchDevice(){
 export async function deleteDevice(id){
     try {
         console.log("Trying to delete device");
-        const device =  await api.delete(`/device`, {
-            device_id: id
+        const device = await api.delete(`/device`, {
+            data: { device_id: id }
         });
-        if (!device){
+        if (!device) {
             return false;
-
         }
-        if( device.status != 200) throw new Error('responded with error')
+        if (device.status != 200) throw new Error('responded with error');
         return true;
-    }
-    catch(error){
+    } catch (error) {
+        console.log(`axios.js : ${error}`);
         return false;
-        console.log(`axios.js : ${error}`)
     }
 }
 export async function sendMessages(senderId, conversationId, content) {

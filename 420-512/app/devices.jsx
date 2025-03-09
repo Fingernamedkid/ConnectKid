@@ -3,9 +3,9 @@ import { StyleSheet, Text, View, Button, FlatList } from 'react-native';
 
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { fetchDevice, getIdFromJwt} from '../lib/axios';
+import { fetchDevice, getIdFromJwt, deleteDevice} from '../lib/axios';
 import { Alert } from 'react-native';
-
+import { Platform } from 'react-native';
 const Devices = () => {
     const [devices, setDevices] = useState([]);
     const router = useRouter();
@@ -16,6 +16,7 @@ const Devices = () => {
             
             const loadDevices = async () => {
                 const id = await getIdFromJwt();
+                console.log("getting devices")
                 if(!id){
                     console.log("no jwt")
                     router.replace('/');
@@ -23,10 +24,13 @@ const Devices = () => {
                 try {
                     const response = await fetchDevice();
                     if (response){
-                        setDevices(response.data);
+                        console.log("response", response.devices)
+                        setDevices(response.devices);
+
                     }
-                    console.log('Devices:', response.data);
+                    
                 } catch (error) {
+                    console.log("error")
                     setDevices([]);
                     console.error('Failed to fetch devices:', error);
                     router.replace('/');
@@ -39,15 +43,29 @@ const Devices = () => {
 
     const handleDelete = async (id) => {
         try {
+            console.log("deleting device", id)
+            
             if(await deleteDevice(id)){
 
-                Alert.alert('Device deleted successfully');
+                if (Platform.OS === 'web') {
+                    alert('Device deleted successfully');
+                } else {
+                    Alert.alert('Device deleted successfully');
+                }
                 setDevices(devices.filter(device => device.device_id !== id));
             }else{
-                Alert.alert('Failed to delete device');
+                if (Platform.OS === 'web') {
+                    alert('Device is not deleted');
+                } else {
+                    Alert.alert('Device not deleted');
+                }
             }
         } catch (error) {
-            Alert.alert('Failed to delete device');
+            if (Platform.OS === 'web') {
+                alert('Error deleting device');
+            } else {
+                Alert.alert('Error deleting device');
+            }
             console.error('Failed to delete device:', error);
         }
     };
@@ -55,12 +73,16 @@ const Devices = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Devices</Text>
-            {devices? devices.map(device => (
-                <View key={device._id} style={styles.deviceItem}>
-                    <Text>{device.device_id}</Text>
-                    <Button title="Delete" onPress={() => handleDelete(device.device_id)} />
-                </View>
-            )): <Text>No devices found</Text>}
+            {devices && devices.length > 0 ? (
+                devices.map(device => (
+                    <View key={device._id} style={styles.deviceItem}>
+                        <Text>{device.device_id}</Text>
+                        <Button title="Delete" onPress={() => handleDelete(device.device_id)} />
+                    </View>
+                ))
+            ) : (
+                <Text>No devices found</Text>
+            )}
         </View>
     );
 }
