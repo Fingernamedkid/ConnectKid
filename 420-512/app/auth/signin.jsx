@@ -73,7 +73,7 @@ const signin = () => {
             className="flex-1 justify-evenly items-center"
             style={[{backgroundColor:colors.background_c1}]}
           >
-      <SafeAreaView>
+      <View>
         <ScrollView showsVerticalScrollIndicator={false}>
               <Text className="text-7xl font-bold tracking-[2px] text-center pt-24 pb-16" style={{color:colors.primary}}>ConnectKid</Text>
               <View className="flex-1 justify-center items-center gap-8" >
@@ -138,7 +138,7 @@ const signin = () => {
                   </TouchableOpacity>
                 </View>
               </ScrollView>
-            </SafeAreaView>
+            </View>
           </KeyboardAvoidingView>
   )
 }

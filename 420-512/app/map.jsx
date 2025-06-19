@@ -13,9 +13,7 @@ function MyClusterComponent(props) {
             coordinate={props.coordinate}
             anchor={{ x: 0.5, y: 0.5 }}
         >
-            <View style={styles.cluster}>
-                <Text style={styles.clusterText}>{props.pointCountAbbreviated}</Text>
-            </View>
+
         </Marker>
     );
 }
