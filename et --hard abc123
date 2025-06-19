@@ -1,0 +1,14 @@
+[33ma886fce[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdevNissia[m[33m, [m[1;32mcombine[m[33m)[m HEAD@{0}: commit (merge): Merge branch 'devTri' of https://github.com/Fingernamedkid/ConnectKid into devNissia
+[33mafea85a[m HEAD@{1}: commit: conv
+[33mfc7a896[m[33m ([m[1;31morigin/devNissia[m[33m)[m HEAD@{2}: pull origin devNissia: Fast-forward
+[33mb3552b8[m HEAD@{3}: commit: Profile et convos
+[33mdc62da1[m HEAD@{4}: commit: conversations
+[33m923b7fc[m[33m ([m[1;31morigin/dev[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mdev[m[33m)[m HEAD@{5}: checkout: moving from dev to devNissia
+[33m923b7fc[m[33m ([m[1;31morigin/dev[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mdev[m[33m)[m HEAD@{6}: pull origin dev: Fast-forward
+[33m6076806[m HEAD@{7}: checkout: moving from devNissia to dev
+[33m923b7fc[m[33m ([m[1;31morigin/dev[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mdev[m[33m)[m HEAD@{8}: pull origin dev: Fast-forward
+[33ma7d7c02[m HEAD@{9}: commit: hi
+[33m13c6a66[m HEAD@{10}: commit (merge): Merge branch 'dev' of https://github.com/Fingernamedkid/ConnectKid into devNissia
+[33m6076806[m HEAD@{11}: checkout: moving from dev to devNissia
+[33m6076806[m HEAD@{12}: commit: signup ajout de champs
+[33m27dc98e[m HEAD@{13}: clone: from https://github.com/Fingernamedkid/ConnectKid.git

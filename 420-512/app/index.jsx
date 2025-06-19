@@ -20,7 +20,7 @@ const index = () => {
                     console.log("no jwt")
                     return null
                 }
-                router.push(`/${id}/profileView`)
+                router.push(`/${id}/profile`)
                 
             }
             getId()
@@ -28,7 +28,8 @@ const index = () => {
         }catch(error){
             console.log(error)
         }
-    })
+    }) 
+    
     return (
         <View className={`flex-1 justify-evenly items-center`} style={{backgroundColor:colors.background_c1}} >
             <Image source={logo} style={{width: 200, height: 200}} />

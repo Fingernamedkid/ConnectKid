@@ -42,7 +42,11 @@ const Conatct = () => {
   
   const handleNamePress = (userId) => {
     console.log('Pressed on user:', userId, 'Redirecting to profile view of user ', userId);
+<<<<<<< HEAD
     router.push(`/message/${userId}`);
+=======
+    router.push(`/${userId}/profile`);
+>>>>>>> origin
   };
 
   const renderBlock = ({ item }) => {
@@ -73,11 +77,18 @@ const Conatct = () => {
             Contact
           </Text>
         </View>
+<<<<<<< HEAD
         <FlatList
           data={contacts}
           renderItem={renderBlock}
           keyExtractor={(item) => item._id}/>
         
+=======
+
+        <View className="flex-row justify-center py-3">
+
+        </View>
+>>>>>>> origin
       </View>
       
     </View>

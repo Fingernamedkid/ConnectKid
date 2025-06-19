@@ -11,10 +11,10 @@ const ViewProfile = () => {
         useCallback(() => {
             console.log("The userId is ", userId);
             if (userId) {
-                router.push(`/${userId}/profile`);
+                router.push(`/${userId}/Messagerie`);
             } else {
                 console.log('No user ID available');
-                router.push('/');
+                router.push('/auth/signin');
             }
         }, [userId, router])
     );

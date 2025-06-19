@@ -1,8 +1,30 @@
 import dotenv from 'dotenv';
 import { MongoClient,ServerApiVersion } from 'mongodb';
 import { encryptPassword, decryptPassword } from './password.js';
+import { ObjectId } from 'mongodb';
 // -----------------------------------------          Config          ----------------------------------------------
+// const conversationSchema = {
+//   _id: ObjectId,
+//   participants: [Number], 
+//   lastMessage: {
+//     content: String,
+//     sender: Number,
+//     timestamp: Date
+//   },
+//   createdAt: Date,
+//   updatedAt: Date
+// }
 
+
+
+// const messageSchema = {
+//   _id: ObjectId,
+//   conversationId: ObjectId,
+//   sender: Number, 
+//   content: String,
+//   timestamp: Date,
+//   read: Boolean
+// }
 dotenv.config({ path: './setup.env' });
 const uri = process.env.URL
 const bd = process.env.DATABASE
@@ -24,12 +46,36 @@ export async function run() {
       await client.db(bd).command({ ping: 1 });
       db = client.db(bd).collection(coll);
       db1 = client.db(bd).collection(coll1);
-      console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    } catch(exception){
-        console.log(exception)
-    }
-  }
+      conversations = client.db(bd).collection('conversations');
+      messages = client.db(bd).collection('messages')
+      location = client.db(bd).collection('location')
+      await messages.createIndex({ conversationId: 1 });
+//   export async function run() {
+//     try {
+//         await client.connect();
+//         await client.db(bd).command({ ping: 1 });
+        
+//         // Initialiser les collections
+//         const database = client.db(bd);
+//         usersCollection = database.collection(coll);
+//         conversationsCollection = database.collection('conversations');
+//         messagesCollection = database.collection('messages');
 
+//         // Créer les index nécessaires
+//         await conversationsCollection.createIndex({ participants: 1 });
+//         await messagesCollection.createIndex({ conversationId: 1 });
+//         await messagesCollection.createIndex({ sender: 1 });
+//         await messagesCollection.createIndex({ timestamp: -1 });
+
+//         console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        
+//         // Rendre la collection users disponible pour les fonctions existantes
+//         db = usersCollection;
+        
+//     } catch(exception) {
+//         console.log(exception);
+//     }
+// }
 // -----------------------------------------          Functions          ----------------------------------------------
 
 export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, password) {
@@ -38,6 +84,7 @@ export async function getUserByUsernameOrEmailAndPassword(usernameOrEmail, passw
   console.log(rows[0]);
   if (rows.length > 0) {
     const user = rows[0];
+    console.log()
     const passworddecrypt = decryptPassword(user.password);
     console.log(passworddecrypt);
     console.log(password);
@@ -69,7 +116,6 @@ function generatePairid() {
 export async function findUserByPairId(pairId) {
   console.log(`Database : find user by pairId : ${pairId}`);
   const rows = await db.find({ pairId: pairId }).toArray();
-  console.log(rows[0]);
   return rows[0];
 }
 
@@ -126,6 +172,19 @@ export async function getUserById(id) {
       return null;
   }
 
+  return rows[0];
+}
+export async function getUserByIdNoPasswordAndNoimage(id) {
+  console.log(`Database : get users by Id : ${id}`);
+  id = parseInt(id);
+
+  const rows = await db.find({_id: id}).project({ password: 0 }).toArray();
+  if (rows.length === 0) {
+      console.log(`No user found with id ${id}`);
+      return null;
+  }
+  
+
   console.log("Got user with id " + id + ": ", rows[0]);
   return rows[0];
 }
@@ -140,7 +199,6 @@ export async function updateUserProfile(userData){
       $set: {
         username: userData.username,
         email: userData.email,
-        phonenum: userData.phonenum,
         image64: userData.profilePic
       }
     };
@@ -154,7 +212,8 @@ export async function getUserContacts(id){
     const user = await getUserById(id);
     let contacts = [];
     for (let i = 0; i < user.contact.length; i++) {
-      let contact = await getUserById(user.contact[i]);
+      let contact = await getUserByIdNoPasswordAndNoimage(user.contact[i]);
+
       contacts.push(contact);
     }
     console.log(contacts);
